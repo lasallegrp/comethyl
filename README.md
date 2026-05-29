@@ -1,4 +1,4 @@
-# comethyl <img src="man/figures/comethyl.png" align="right" width="120"/>
+# comethyl <img src="man/figures/comethyl.png" align="right" width="250"/>
 
 An R package for weighted region comethylation network analysis.
 
