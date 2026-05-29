@@ -40,7 +40,7 @@ jobs:
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown
+          extra-packages: any::pkgdown, any::prettydoc
           needs: website
 
       - name: Install Bioconductor dependencies
