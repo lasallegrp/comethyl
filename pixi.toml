@@ -1,0 +1,100 @@
+[workspace]
+name = "comethyl"
+version = "0.1.0"
+authors = ["George Eusebio Kuodza <gekuodza@health.ucdavis.edu>"]
+channels = ["conda-forge", "bioconda"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+# linux-aarch64 excluded: longshot has no linux-aarch64 bioconda build.
+# Use the Docker image for linux-aarch64 (see reproducibility/Dockerfile).
+
+[tasks]
+install-comethyl = "Rscript env/install_comethyl.R"
+test-r           = "Rscript -e 'sessionInfo()'"
+
+# ============================================================================
+# Shared dependencies (all platforms)
+# These are either conda-forge noarch or have confirmed osx-arm64 builds
+# ============================================================================
+[dependencies]
+python    = "*"
+pip       = "*"
+pandoc    = "*"
+bedtools  = "*"
+
+r-base        = "4.3.*"
+r-tidyverse   = "*"
+r-essentials  = "*"
+r-openxlsx    = "*"
+r-cowplot     = "*"
+r-patchwork   = "*"
+r-magrittr    = "*"
+r-stringr     = "*"
+r-ggplot2     = "*"
+r-remotes     = "*"
+r-optparse    = "*"
+r-enrichr     = "*"   # conda-forge, noarch — works on all platforms
+r-ggdendro    = ">=0.2.0,<0.3"
+"r-r.devices" = ">=2.17.2,<3"
+r-rlist       = ">=0.4.6.2,<0.5"
+
+# r-wgcna: bioconda, linux-aarch64 only — no osx-arm64 build
+# Installed via BiocManager in install_comethyl.R on all platforms for
+# consistency (avoids version mismatch between conda and BiocManager installs)
+
+# ============================================================================
+# linux-64: full Bioconductor + longshot + wgcna from conda
+# ============================================================================
+[target.linux-64.dependencies]
+longshot = "*"
+r-wgcna  = "*"
+bioconductor-genomeinfodb       = "*"
+bioconductor-genomeinfodbdata   = "*"
+bioconductor-annotatr           = "*"
+bioconductor-bsseq              = "*"
+bioconductor-delayedmatrixstats = "*"
+bioconductor-dmrseq             = "*"
+bioconductor-sva                = "*"
+bioconductor-preprocesscore     = "*"
+bioconductor-impute             = "*"
+bioconductor-biomart            = "*"
+bioconductor-clusterprofiler    = "*"
+bioconductor-dose               = "*"
+bioconductor-enrichplot         = "*"
+bioconductor-fgsea              = "*"
+bioconductor-genomicranges      = "*"
+bioconductor-rgreat             = "*"
+bioconductor-reactomepa         = "*"
+"bioconductor-reactome.db"      = "*"
+
+# ============================================================================
+# osx-64: full Bioconductor + longshot + wgcna from conda
+# ============================================================================
+[target.osx-64.dependencies]
+longshot = "*"
+r-wgcna  = "*"
+bioconductor-genomeinfodb       = "*"
+bioconductor-genomeinfodbdata   = "*"
+bioconductor-annotatr           = "*"
+bioconductor-bsseq              = "*"
+bioconductor-delayedmatrixstats = "*"
+bioconductor-dmrseq             = "*"
+bioconductor-sva                = "*"
+bioconductor-preprocesscore     = "*"
+bioconductor-impute             = "*"
+bioconductor-biomart            = "*"
+bioconductor-clusterprofiler    = "*"
+bioconductor-dose               = "*"
+bioconductor-enrichplot         = "*"
+bioconductor-fgsea              = "*"
+bioconductor-genomicranges      = "*"
+bioconductor-rgreat             = "*"
+bioconductor-reactomepa         = "*"
+"bioconductor-reactome.db"      = "*"
+
+# ============================================================================
+# osx-arm64: CRAN only from conda; all Bioconductor + WGCNA installed via
+# `pixi run install-comethyl` using BiocManager.
+# Reason: bioconda ARM64 builds of these packages require r-base >=4.4,
+# but this environment targets r-base 4.3.* (Bioconductor 3.18).
+# ============================================================================
+# (no additional dependencies beyond [dependencies] for osx-arm64)

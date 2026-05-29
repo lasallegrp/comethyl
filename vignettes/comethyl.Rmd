@@ -1,33 +1,30 @@
 ---
 title: "Introduction to Comethyl"
 author: "Charles Mordaunt and Julia Mouat"
-output: 
-  prettydoc::html_pretty:
-    theme: cayman
-    highlight: github
+date: "`r Sys.Date()`"
+description: "comethyl"
+output:
+  rmarkdown::html_vignette:
     toc: true
-    number_sections: true
 vignette: >
   %\VignetteIndexEntry{Introduction to Comethyl}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
 ## Comethyl
 
-Comethyl is a systems biology method for multivariate analysis of whole genome bisulfite sequencing (WGBS) data. Comethyl can be used to construct a weighted region comethylation network from user-defined regions, identify comethylation modules and the genomic regions that make up those modules, analyze functional enrichments, and investigate correlations between comethylation modules and sample traits of interest. 
+Comethyl is a systems biology method for multivariate analysis of whole genome
+bisulfite sequencing (WGBS) data. Comethyl can be used to construct a weighted
+region comethylation network from user-defined regions, identify comethylation
+modules and the genomic regions that make up those modules, analyze functional
+enrichments, and investigate correlations between comethylation modules and
+sample traits of interest.
 
 ## Glossary of Concepts
 
 | Term | Definition |
-|:-----|:-----------|
+| ---- | ---------- |
 | Comethylation network | A weighted network in which nodes correspond to genomic regions and edges correspond to correlations between region DNA methylation. |
 | Module | A group of genomic regions with correlated DNA methylation. |
 | Module Eigennode | The first principal component of a module, can be thought of as a weighted average of methylation values. |
@@ -38,43 +35,272 @@ Comethyl is a systems biology method for multivariate analysis of whole genome b
 
 ## Inputs
 
-**Bismark Cytosine Reports:** Following WGBS of your samples, the raw fastq files should be processed into CpG count matrices where biases have been removed. One available pipeline is [CpG_Me](https://github.com/ben-laufer/CpG_Me), which performs read alignment and quality control of WGBS raw fastq files, and then generates the Bismark Cytosine Reports used by Comethyl.
+**Bismark Cytosine Reports:** Following WGBS of your samples, the raw fastq
+files should be processed into CpG count matrices where biases have been
+removed. One available pipeline is
+[CpG_Me](https://github.com/ben-laufer/CpG_Me), which performs read alignment
+and quality control of WGBS raw fastq files, and then generates the Bismark
+Cytosine Reports used by Comethyl.
 
-**Sample Trait Table** (`"sample_info.xlsx"`)**:** This is an excel table read in as a `data.frame` with samples (specifying CpG reports) as rows and sample traits of interest as columns. All values in the table must be numeric, though the data can be either categorical or continuous for any given trait. Sample traits can include all available information about potential variables of interest as well as potential confounding variables. In WGBS datasets, potential confounding variables include cell type proportions as well as technical variables including coverage, read duplication, read trimming, and global cytosine methylation levels. For human populations, metadata should include clinical, diagnostic, and demographic data, as well as sample collection characteristics, such as gestational age and birthweight for cord blood. For experimental studies in animal models or cell cultures, experimental variables should be included in the metadata for exploring module-trait relationships. The comethylation modules identified from the Bismark Cytosine Reports will be correlated with the traits in this table.
+**Sample Trait Table** (`"sample_info.xlsx"`)**:** This is an excel table read
+in as a `data.frame` with samples (specifying CpG reports) as rows and sample
+traits of interest as columns. All values in the table must be numeric, though
+the data can be either categorical or continuous for any given trait. Sample
+traits can include all available information about potential variables of
+interest as well as potential confounding variables. In WGBS datasets, potential
+confounding variables include cell type proportions as well as technical
+variables including coverage, read duplication, read trimming, and global
+cytosine methylation levels. For human populations, metadata should include
+clinical, diagnostic, and demographic data, as well as sample collection
+characteristics, such as gestational age and birthweight for cord blood. For
+experimental studies in animal models or cell cultures, experimental variables
+should be included in the metadata for exploring module-trait relationships. The
+comethylation modules identified from the Bismark Cytosine Reports will be
+correlated with the traits in this table.
 
 ## Annotation
 
-One unique feature of Comethyl is the ability to define regions based on functional annotations, such as CpG islands, gene bodies, enhancers, or a custom annotation. This allows the user to focus on a specific portion of the genome and integrate with other genomic data sets. Since gene body methylation can correlate positively with expression, gene bodies were selected as alternative regions to explore in the cord blood data set, in addition to the approach of calling genomic regions by CpG location.
+One unique feature of Comethyl is the ability to define regions based on
+functional annotations, such as CpG islands, gene bodies, enhancers, or a
+custom annotation. This allows the user to focus on a specific portion of the
+genome and integrate with other genomic data sets. Since gene body methylation
+can correlate positively with expression, gene bodies were selected as
+alternative regions to explore in the cord blood data set, in addition to the
+approach of calling genomic regions by CpG location.
 
 ## Use Case
 
-The example detailed in the vignettes is from a dataset of 74 male cord blood samples from newborns who were later diagnosed with autism spectrum disorder (ASD) and those with typical development (TD). Comethylation modules were associated with 49 sample characteristics including diagnosis, cell types, sample sequencing information such as percent CpG methylation, and demographic data such as home ownership. Raw data is available on GEO ([GSE140730](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE140730)), see the [previous publication](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-00785-8) for more details.
+The example detailed in the vignettes is from a dataset of 74 male cord blood
+samples from newborns who were later diagnosed with autism spectrum disorder
+(ASD) and those with typical development (TD). Comethylation modules were
+associated with 49 sample characteristics including diagnosis, cell types,
+sample sequencing information such as percent CpG methylation, and demographic
+data such as home ownership. Raw data is available on GEO
+([GSE140730](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE140730)),
+see the [previous publication](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-00785-8)
+for more details.
 
 ## Installation
 
-You can install Comethyl from this repository and load it into your R session with the code below.
+Comethyl requires R (≥ 4.3), a set of Bioconductor packages, and several
+system-level dependencies. There are two supported installation paths:
+**pixi** (recommended for reproducibility) and **remotes** (a quick option if
+you already have a working R / Bioconductor environment).
 
+---
+
+### Option 1: pixi (Recommended)
+
+[pixi](https://pixi.sh) is a cross-platform package manager built on the conda
+ecosystem. It creates a fully self-contained, reproducible environment from a
+lock file, meaning the exact versions of R, Bioconductor packages, and system
+libraries are pinned and portable across machines and operating systems.
+
+#### Supported platforms
+
+| Platform | Supported | Notes |
+|---|---|---|
+| macOS (Intel, x86\_64) | ✅ | `osx-64` |
+| macOS (Apple Silicon, M1/M2/M3) | ✅ | `osx-arm64` |
+| Linux (x86\_64) | ✅ | `linux-64` |
+| Linux (ARM64) | ⚠️ | `linux-aarch64` — see note below |
+| Windows (native) | ❌ | Use WSL2 instead — see note below |
+
+> **ARM64 Linux note:** The `longshot` variant caller does not currently publish
+> `linux-aarch64` binaries on bioconda. If you are on an ARM64 Linux machine and
+> `pixi install` fails at the solve step, remove `linux-aarch64` from the
+> `platforms` list in `pixi.toml` and use the provided Docker image instead
+> (see `reproducibility/Dockerfile`).
+
+> **Windows note:** The R/Bioconductor packages and `longshot` in this stack do
+> not have native Windows conda builds. Windows users should install
+> [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) (Ubuntu
+> recommended), then follow the Linux instructions below inside the WSL2
+> terminal.
+
+#### 1a. Install pixi
+
+Open a terminal and run the one-line installer:
+
+**macOS / Linux (including WSL2)**
+
+```bash
+curl -fsSL https://pixi.sh/install.sh | bash
 ```
+
+After installation, restart your terminal so the `pixi` command is on your
+`PATH`. Verify with:
+
+```bash
+pixi --version
+```
+
+#### 1b. Clone the repository
+
+**Using the package repo** (to follow the vignettes or develop):
+
+```bash
+git clone https://github.com/lasallegrp/comethyl.git
+cd comethyl
+```
+
+The `pixi.toml` lives at the **repository root**. Run all pixi commands from
+there.
+
+**Using a published analysis project** (to reproduce a specific paper):
+
+```bash
+# Intergenerational Breast Cancer WGBS project
+git clone https://github.com/dreusebio/intergen_BrCa_wgbs_comethyl.git
+cd intergen_BrCa_wgbs_comethyl/reproducibility
+
+# GROWELL comethylation project (includes consensus module analysis)
+git clone https://github.com/dreusebio/wgbs_growell_comethylation_analysis.git
+cd wgbs_growell_comethylation_analysis/reproducibility
+```
+
+In analysis project repos, the `pixi.toml` lives inside `reproducibility/`.
+Run all pixi commands from that subdirectory.
+
+#### 1c. Install the environment
+
+```bash
+pixi install
+```
+
+pixi reads `pixi.lock` and installs the exact pinned environment — no version
+resolution happens at this step. The result is identical across machines.
+
+> **First run:** Downloading the full R/Bioconductor stack will take several
+> minutes depending on your connection. Subsequent `pixi install` calls on the
+> same machine are fast because packages are cached locally.
+
+#### 1d. Install comethyl into the environment
+
+A custom task handles the final installation of comethyl and any R-level
+dependencies not available on conda channels:
+
+```bash
+pixi run install-comethyl
+```
+
+This runs `env/install_comethyl.R` inside the pixi-managed R, installing
+comethyl from `lasallegrp/comethyl` along with its Bioconductor dependencies.
+
+#### 1e. Launch R inside the environment
+
+All R work should be done within the activated pixi environment so the correct
+R and library paths are used.
+
+**Interactive R session:**
+
+```bash
+pixi shell   # activates the environment in your current shell
+R            # launches R from within it
+```
+
+**Run a script directly:**
+
+```bash
+pixi run Rscript analysis/01_prepare_data.R
+```
+
+#### Reproducibility note
+
+The `pixi.lock` file is the critical artifact — it pins every package to an
+exact version and checksum. **Always commit both `pixi.toml` and `pixi.lock`
+to version control.** Collaborators and reviewers who clone the repository and
+run `pixi install` will get a bit-for-bit identical environment.
+
+---
+
+### Option 2: remotes (Quick install into an existing R environment)
+
+If you already have R ≥ 4.3 and Bioconductor set up and do not wish to use
+pixi, you can install comethyl directly from GitHub:
+
+```r
 install.packages(c("BiocManager", "remotes"))
-BiocManager::install("cemordaunt/comethyl")
+BiocManager::install("lasallegrp/comethyl")
 library(comethyl)
 ```
 
+> **Note:** This installs into your system or user R library without
+> environment isolation. Package versions are resolved at install time and may
+> differ across machines or future R sessions. For publication-associated
+> analyses, the pixi path is strongly preferred.
+
+#### Required system libraries (remotes path only)
+
+Some Bioconductor packages require system libraries to be present before
+installation. pixi handles these automatically; if using the remotes path you
+must install them manually.
+
+**macOS (Homebrew)**
+
+```bash
+brew install libxml2 harfbuzz fribidi libgit2
+```
+
+**Ubuntu / Debian Linux**
+
+```bash
+sudo apt-get install -y \
+  libxml2-dev libcurl4-openssl-dev libssl-dev \
+  libharfbuzz-dev libfribidi-dev libgit2-dev \
+  libfontconfig1-dev libfreetype6-dev
+```
+
+**Windows**
+
+Bioconductor packages are distributed as pre-compiled binaries on Windows, so
+most system dependencies are bundled. Ensure
+[Rtools](https://cran.r-project.org/bin/windows/Rtools/) is installed and on
+your `PATH` for any packages that require compilation from source.
+
+---
+
+### Loading comethyl
+
+Once installed via either path, load the package in R as usual:
+
+```r
+library(comethyl)
+```
+
+Full documentation is available at <https://lasallegrp.github.io/comethyl/>.
+
 ## Memory Usage
 
-Comethyl performs a large number of correlation calculations when constructing the network, and these can take up a large amount of memory for an extended period of time. Memory usage and time should be taken into account when running `getSoftPower()` and `getModules()`. 
+Comethyl performs a large number of correlation calculations when constructing
+the network, and these can take up a large amount of memory for an extended
+period of time. Memory usage and time should be taken into account when running
+`getSoftPower()` and `getModules()`.
 
-Because `getSoftPower()` uses an exponentially increasing amount of RAM as the number of regions increase, care should be taken to filter the number of regions so that only the most informative regions are considered. For reference, up to 250,000 regions are typically able to run on a large node with 500GB of RAM. Smaller region sets typically require much less memory to run. It's also not recommended to use multiple threads with large region sets.
+Because `getSoftPower()` uses an exponentially increasing amount of RAM as the
+number of regions increase, care should be taken to filter the number of regions
+so that only the most informative regions are considered. For reference, up to
+250,000 regions are typically able to run on a large node with 500 GB of RAM.
+Smaller region sets typically require much less memory to run. It is also not
+recommended to use multiple threads with large region sets.
 
-With default system BLAS libraries, `getModules()` can take multiple days to run, but this can be sped up considerably if R is configured with a fast BLAS library such as [OpenBLAS](https://www.openblas.net). In testing, `getModules()` took 85 hours to run on a set of 250,000 regions with a default BLAS, but only 6 hours with OpenBLAS. `getSoftPower()` was also sped up from 3 hours to 2 hours with OpenBLAS. More information on configuring R with OpenBLAS and similar libraries can be found in the [R Installation Manual](https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#BLAS).
+With default system BLAS libraries, `getModules()` can take multiple days to
+run, but this can be sped up considerably if R is configured with a fast BLAS
+library such as [OpenBLAS](https://www.openblas.net). In testing, `getModules()`
+took 85 hours to run on a set of 250,000 regions with a default BLAS, but only
+6 hours with OpenBLAS. `getSoftPower()` was also sped up from 3 hours to 2
+hours with OpenBLAS. The pixi environment (Option 1 above) links R against
+OpenBLAS automatically via the `conda-forge` build of `r-base`, so no manual
+configuration is needed. For the remotes installation path, more information on
+configuring R with OpenBLAS manually can be found in the
+[R Installation and Administration manual](https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#BLAS).
 
 ## See Also
 
-- [Function reference](https://cemordaunt.github.io/comethyl/reference/index.html)
+- [Function reference](https://lasallegrp.github.io/comethyl/reference/index.html)
 
-- [CpG cluster analysis vignette](https://cemordaunt.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
+- [CpG cluster analysis vignette](https://lasallegrp.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
 
-- [Gene body analysis vignette](https://cemordaunt.github.io/comethyl/articles/Gene_Body_Analysis.html)
+- [Gene body analysis vignette](https://lasallegrp.github.io/comethyl/articles/Gene_Body_Analysis.html)
 
-- [Module preservation vignette](https://cemordaunt.github.io/comethyl/articles/Module_Preservation.html)
-
+- [Module preservation vignette](https://lasallegrp.github.io/comethyl/articles/Module_Preservation.html)

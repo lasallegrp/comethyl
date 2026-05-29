@@ -1,12 +1,15 @@
-url: https://cemordaunt.github.io/comethyl/
+url: https://lasallegrp.github.io/comethyl/
+
 template:
   bootstrap: 5
+
 authors:
   sidebar:
     roles: [cre, aut, ctb]
+
 navbar:
   structure:
-    left:  [intro, reference, article1, article2, article3]
+    left:  [intro, reference, article1, article2, article3, article4]
     right: [search, github]
   components:
     article1:
@@ -18,6 +21,10 @@ navbar:
     article3:
       text: Module Preservation
       href: articles/Module_Preservation.html
+    article4:
+      text: Consensus Modules
+      href: articles/Consensus_Module_Analysis.html
+
 home:
   sidebar:
     structure: [links, license, community, custom, authors, dev]
@@ -25,48 +32,53 @@ home:
       custom:
         title: Citation
         text: Comethyl [Publication](https://academic.oup.com/bib/advance-article/doi/10.1093/bib/bbab554/6509051)
+
 reference:
 - title: Package
   contents:
   - comethyl
+
 - title: Prepare Methylation Data
   contents:
-  - adjustRegionMeth
-  - filterCpGs
-  - filterRegions
   - getCpGs
   - getCpGtotals
-  - getDendro
-  - getPCs
-  - getRegionMeth
-  - getRegionTotals
-  - getRegions
   - plotCpGtotals
-  - plotDendro
-  - plotRegionStats
+  - filterCpGs
+  - getRegions
+  - getRegionTotals
   - plotRegionTotals
+  - getRegionMeth
+  - filterRegions
+  - plotRegionStats
   - plotSDstats
+  - getDendro
+  - plotDendro
+  - getPCs
+  - adjustRegionMeth
+
 - title: Construct Network
   contents:
   - getCor
-  - getModuleBED
-  - getModules
   - getSoftPower
-  - plotHeatmap
-  - plotRegionDendro
   - plotSoftPower
+  - getModules
+  - plotRegionDendro
+  - plotHeatmap
+  - getModuleBED
+
 - title: Explore Modules
   contents:
-  - annotateModule
-  - enrichModule
-  - getGeneList
   - getMEtraitCor
-  - listOntologies
-  - plotEnrichment
   - plotMEtraitCor
   - plotMEtraitDot
   - plotMEtraitScatter
   - plotMethTrait
+  - annotateModule
+  - getGeneList
+  - enrichModule
+  - listOntologies
+  - plotEnrichment
+
 - title: Test Module Preservation
   contents:
   - getModulePreservation

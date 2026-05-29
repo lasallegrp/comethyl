@@ -1,64 +1,67 @@
 Package: comethyl
-Title: An R Package for Weighted Region Comethylation Network Analysis
-Version: 1.3.0
+Title: Weighted Region Comethylation Network Analysis
+Version: 2.0.0
 Authors@R: c(
-    person(given = "Charles",
-           family = "Mordaunt",
-           role = c("aut", "cre"),
-           email = "mordauntcharles@gmail.com",
-           comment = c(ORCID = "0000-0002-3820-3298")),
-    person(given = "Julia",
-           family = "Mouat",
-           role = "ctb",
-           email = "jmouat@ucdavis.edu"))
-Description: Comethyl builds upon the WGCNA package to identify and interpret modules of 
-    comethylated regions from whole-genome bisulfite sequencing data. Regions are 
-    defined from clusters of CpG sites or from genomic annotations, and then percent
-    methylation values are used to identify comethylation modules. Interesting
-    modules are identified and explored by comparing with sample traits and 
-    examining functional enrichments. Results are then visualized with high-quality,
-    editable plots from ggplot2.
+    person("Charles", "Mordaunt", email = "cemordaunt@gmail.com",
+           role = c("aut"),
+           comment = c(ORCID = "0000-0002-7476-5187")),
+    person("Julia", "Mouat", role = "aut"),
+    person("George", "Eusebio Kuodza", email = "gekuodza@health.ucdavis.edu",
+           role = c("cre", "aut")),
+    person("Janine", "LaSalle",
+           role = c("ths", "fnd", "ctb"))
+)
+Description: Comethyl builds upon the WGCNA package to identify and interpret
+    modules of comethylated regions from whole-genome bisulfite sequencing data.
+    Regions are defined from clusters of CpG sites or from genomic annotations,
+    and then percent methylation values are used to identify comethylation
+    modules. Interesting modules are identified and explored by comparing with
+    sample traits and examining functional enrichments. Results are then
+    visualized with high-quality, editable plots from ggplot2.
 License: MIT + file LICENSE
+URL: https://lasallegrp.github.io/comethyl/, https://github.com/lasallegrp/comethyl
+BugReports: https://github.com/lasallegrp/comethyl/issues
 Encoding: UTF-8
 LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
-Imports: 
-    annotatr,
-    BiocGenerics,
-    BiocParallel,
-    biomaRt,
+RoxygenNote: 7.2.3
+Depends:
+    R (>= 4.3)
+Imports:
     bsseq,
-    cowplot,
-    DelayedArray,
-    DelayedMatrixStats,
-    dmrseq,
-    dplyr,
-    forcats,
-    GenomeInfoDb,
-    GenomicFeatures,
     GenomicRanges,
-    ggdendro,
-    ggplot2,
-    grDevices,
     IRanges,
-    magrittr,
-    MASS,
-    openxlsx,
-    purrr,
+    annotatr,
+    WGCNA,
+    ggplot2,
+    ggdendro,
+    cowplot,
     R.devices,
-    readr,
-    reshape2,
-    rGREAT,
     rlist,
-    rtracklayer,
-    scales,
-    stats,
-    stringr,
-    sva,
-    tibble,
+    dplyr,
     tidyr,
-    utils,
-    WGCNA
-URL: https://github.com/cemordaunt/comethyl
-BugReports: https://github.com/cemordaunt/comethyl/issues
+    stringr,
+    openxlsx,
+    magrittr,
+    reshape2,
+    BiocGenerics,
+    S4Vectors,
+    SummarizedExperiment,
+    GenomeInfoDb,
+    DelayedMatrixStats,
+    sva,
+    rGREAT,
+    clusterProfiler,
+    DOSE,
+    enrichplot,
+    fgsea,
+    ReactomePA,
+    enrichR
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat,
+    BiocStyle,
+    dmrseq,
+    biomaRt,
+    org.Hs.eg.db
+VignetteBuilder: knitr
