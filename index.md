@@ -1,4 +1,4 @@
-# comethyl ![](reference/figures/comethyl.png)
+# comethyl
 
 An R package for weighted region comethylation network analysis.
 
@@ -14,6 +14,12 @@ comethylation modules. Interesting modules are identified and explored
 by comparing with sample traits and examining functional enrichments.
 Results are then visualized with high-quality, editable plots from
 ggplot2.
+
+## Workflow
+
+![Comethyl Workflow](reference/figures/comethyl.png)
+
+Comethyl Workflow
 
 ## Installation
 
