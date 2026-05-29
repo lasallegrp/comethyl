@@ -1,0 +1,170 @@
+# comethyl
+
+An R package for weighted region comethylation network analysis.
+
+Comethyl builds upon the WGCNA package to identify and interpret modules
+of comethylated regions from whole-genome bisulfite sequencing data.
+Regions are defined from clusters of CpG sites or from genomic
+annotations, and then percent methylation values are used to identify
+comethylation modules.
+
+Interesting modules are identified and explored by comparing with sample
+traits and examining functional enrichments. Results are then visualized
+with high-quality, editable plots from ggplot2.
+
+## Installation
+
+You can install Comethyl from this repository and load it into your R
+session with the code below.
+
+    install.packages(c("BiocManager", "remotes"))
+    BiocManager::install("cemordaunt/comethyl")
+    library(comethyl)
+
+## Documentation
+
+Complete documentation for comethyl is available at
+<https://cemordaunt.github.io/comethyl/>.
+
+- [Introduction to
+  Comethyl](https://cemordaunt.github.io/comethyl/articles/comethyl.html)
+
+- [Function
+  reference](https://cemordaunt.github.io/comethyl/reference/index.html)
+
+- [CpG cluster analysis
+  vignette](https://cemordaunt.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
+
+- [Gene body analysis
+  vignette](https://cemordaunt.github.io/comethyl/articles/Gene_Body_Analysis.html)
+
+- [Module preservation
+  vignette](https://cemordaunt.github.io/comethyl/articles/Module_Preservation.html)
+
+## Workflow
+
+![Comethyl Workflow](reference/figures/comethyl.png)
+
+Comethyl Workflow
+
+## Citing Comethyl
+
+If you use Comethyl in your work, please cite our *Briefings in
+Bioinformatics*
+[publication](https://academic.oup.com/bib/advance-article/doi/10.1093/bib/bbab554/6509051):
+
+Mordaunt CE, Mouat JS, Schmidt RJ, and LaSalle JM. (2022) Comethyl: a
+network-based methylome approach to investigate the multivariate nature
+of health and disease. *Briefings in Bioinformatics* bbab554.
+
+## Acknowledgements
+
+Many thanks to Julia Mouat for creating the vignettes, and to both Ben
+Laufer and Janine LaSalle for very helpful discussions.
+
+# Package index
+
+## Package
+
+- [`comethyl`](https://lasallegrp.github.io/comethyl/reference/comethyl.md)
+  : comethyl: An R package for weighted region comethylation network
+  analysis
+
+## Prepare Methylation Data
+
+- [`getCpGs()`](https://lasallegrp.github.io/comethyl/reference/getCpGs.md)
+  : Read Bismark CpG reports
+- [`getCpGtotals()`](https://lasallegrp.github.io/comethyl/reference/getCpGtotals.md)
+  : Get Total CpGs at Different Coverage Cutoffs
+- [`plotCpGtotals()`](https://lasallegrp.github.io/comethyl/reference/plotCpGtotals.md)
+  : Visualize Total CpGs at Different Coverage Cutoffs
+- [`filterCpGs()`](https://lasallegrp.github.io/comethyl/reference/filterCpGs.md)
+  : Filter BSseq Objects by Coverage
+- [`getRegions()`](https://lasallegrp.github.io/comethyl/reference/getRegions.md)
+  : Generate Regions from CpGs
+- [`getRegionTotals()`](https://lasallegrp.github.io/comethyl/reference/getRegionTotals.md)
+  : Get Region Totals at Different Cutoffs
+- [`plotRegionTotals()`](https://lasallegrp.github.io/comethyl/reference/plotRegionTotals.md)
+  : Visualize Region Totals at Different Cutoffs
+- [`getRegionMeth()`](https://lasallegrp.github.io/comethyl/reference/getRegionMeth.md)
+  : Get Region Methylation Data
+- [`filterRegions()`](https://lasallegrp.github.io/comethyl/reference/filterRegions.md)
+  : Filter Regions
+- [`plotRegionStats()`](https://lasallegrp.github.io/comethyl/reference/plotRegionStats.md)
+  : Plot Histograms of Region Statistics
+- [`plotSDstats()`](https://lasallegrp.github.io/comethyl/reference/plotSDstats.md)
+  : Plot Heatmaps of Region Standard Deviation vs Features
+- [`getDendro()`](https://lasallegrp.github.io/comethyl/reference/getDendro.md)
+  : Perform Hierarchical Clustering
+- [`plotDendro()`](https://lasallegrp.github.io/comethyl/reference/plotDendro.md)
+  : Plot a Dendrogram
+- [`getPCs()`](https://lasallegrp.github.io/comethyl/reference/getPCs.md)
+  : Calculate Top Principal Components
+- [`adjustRegionMeth()`](https://lasallegrp.github.io/comethyl/reference/adjustRegionMeth.md)
+  : Adjust Methylation Data for Principal Components
+
+## Construct Network
+
+- [`getCor()`](https://lasallegrp.github.io/comethyl/reference/getCor.md)
+  : Calculate Correlations
+- [`getSoftPower()`](https://lasallegrp.github.io/comethyl/reference/getSoftPower.md)
+  : Estimate Soft Power Threshold
+- [`plotSoftPower()`](https://lasallegrp.github.io/comethyl/reference/plotSoftPower.md)
+  : Plot Soft Power Fit and Connectivity
+- [`getModules()`](https://lasallegrp.github.io/comethyl/reference/getModules.md)
+  : Identify Modules of Comethylated Regions
+- [`plotRegionDendro()`](https://lasallegrp.github.io/comethyl/reference/plotRegionDendro.md)
+  : Plot Region Dendrograms
+- [`plotHeatmap()`](https://lasallegrp.github.io/comethyl/reference/plotHeatmap.md)
+  : Plot a Heatmap with Dendrograms
+- [`getModuleBED()`](https://lasallegrp.github.io/comethyl/reference/getModuleBED.md)
+  : Get a Module BED file
+
+## Explore Modules
+
+- [`getMEtraitCor()`](https://lasallegrp.github.io/comethyl/reference/getMEtraitCor.md)
+  : Calculate Correlation Statistics Between Module Eigennodes and
+  Traits
+- [`plotMEtraitCor()`](https://lasallegrp.github.io/comethyl/reference/plotMEtraitCor.md)
+  : Plot a Heatmap of Correlations Between Module Eigennodes and Traits
+- [`plotMEtraitDot()`](https://lasallegrp.github.io/comethyl/reference/plotMEtraitDot.md)
+  : Visualize a Module Eigennode - Trait Correlation as a Dot Plot
+- [`plotMEtraitScatter()`](https://lasallegrp.github.io/comethyl/reference/plotMEtraitScatter.md)
+  : Visualize a Module Eigennode - Trait Correlation as a Scatter Plot
+- [`plotMethTrait()`](https://lasallegrp.github.io/comethyl/reference/plotMethTrait.md)
+  : Plot Module Methylation Values By a Sample Trait
+- [`annotateModule()`](https://lasallegrp.github.io/comethyl/reference/annotateModule.md)
+  : Annotate Module Regions
+- [`getGeneList()`](https://lasallegrp.github.io/comethyl/reference/getGeneList.md)
+  : Extract a Gene List from Annotated Regions
+- [`enrichModule()`](https://lasallegrp.github.io/comethyl/reference/enrichModule.md)
+  : Analyze Module Functional Enrichment with GREAT
+- [`listOntologies()`](https://lasallegrp.github.io/comethyl/reference/listOntologies.md)
+  : Get Ontologies Available in GREAT
+- [`plotEnrichment()`](https://lasallegrp.github.io/comethyl/reference/plotEnrichment.md)
+  : Plot Functional Enrichment Results
+
+## Test Module Preservation
+
+- [`getModulePreservation()`](https://lasallegrp.github.io/comethyl/reference/getModulePreservation.md)
+  : Calculate Module Preservation
+- [`plotModulePreservation()`](https://lasallegrp.github.io/comethyl/reference/plotModulePreservation.md)
+  : Visualize Module Preservation
+
+# Articles
+
+### All vignettes
+
+- [Introduction to
+  Comethyl](https://lasallegrp.github.io/comethyl/articles/comethyl.md):
+
+  comethyl
+
+- [CpG Cluster
+  Analysis](https://lasallegrp.github.io/comethyl/articles/CpG_Cluster_Analysis.md):
+
+- [Gene Body
+  Analysis](https://lasallegrp.github.io/comethyl/articles/Gene_Body_Analysis.md):
+
+- [Module
+  Preservation](https://lasallegrp.github.io/comethyl/articles/Module_Preservation.md):
