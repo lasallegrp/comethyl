@@ -175,6 +175,17 @@ resolution happens at this step. The result is identical across machines.
 > minutes depending on your connection. Subsequent `pixi install` calls on the
 > same machine are fast because packages are cached locally.
 
+Post-link scripts: Some Bioconductor annotation packages (org.Hs.eg.db, GO.db, reactome.db, etc.) require post-link scripts
+ to run in order to index their databases.pixi disables these by default for security. 
+ After the initial pixi install completes, enable and re-run them:
+
+ ```bash
+pixi config set --local run-post-link-scripts insecure
+pixi install
+```
+
+This only needs to be done once per local environment. Without it, the annotation packages will install but may throw errors when queried from R.
+
 #### 1d. Install comethyl into the environment
 
 A custom task handles the final installation of comethyl and any R-level
