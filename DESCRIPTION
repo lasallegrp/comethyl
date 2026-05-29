@@ -9,8 +9,7 @@ Authors@R: c(
     person("George", "Eusebio Kuodza", email = "gekuodza@health.ucdavis.edu",
            role = c("cre", "aut")),
     person("Janine", "LaSalle",
-           role = c("ths", "fnd", "ctb"))
-)
+           role = c("ths", "fnd", "ctb")))
 Description: Comethyl builds upon the WGCNA package to identify and interpret
     modules of comethylated regions from whole-genome bisulfite sequencing data.
     Regions are defined from clusters of CpG sites or from genomic annotations,
