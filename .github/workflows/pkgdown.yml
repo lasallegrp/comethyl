@@ -35,17 +35,20 @@ jobs:
           sudo apt-get install -y \
             libxml2-dev libcurl4-openssl-dev libssl-dev \
             libharfbuzz-dev libfribidi-dev libgit2-dev \
-            libfontconfig1-dev libfreetype6-dev
+            libfontconfig1-dev libfreetype6-dev \
+            libglpk-dev libbz2-dev liblzma-dev \
+            libpng-dev libjpeg-dev libtiff-dev
 
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, any::prettydoc
+          extra-packages: any::pkgdown
           needs: website
 
-      - name: Install Bioconductor dependencies
+      - name: Install Bioconductor and vignette dependencies
         shell: Rscript {0}
         run: |
+          install.packages("prettydoc")
           if (!requireNamespace("BiocManager", quietly = TRUE))
             install.packages("BiocManager")
           BiocManager::install(c(
