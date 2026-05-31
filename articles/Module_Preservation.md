@@ -9,7 +9,7 @@ dataset. We identify modules of comethylated regions, generate
 statistics of module preservation, and visualize them.
 
 The original dataset explored in the [CpG Cluster
-Analysis](https://cemordaunt.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
+Analysis](https://lasallegrp.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
 vignette included 74 male cord blood samples from newborns who were
 later diagnosed with autism spectrum disorder (ASD) and those with
 typical development (TD). The replication dataset has the same design
@@ -23,10 +23,32 @@ see the [previous
 publication](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-00785-8)
 for more details.
 
+## Environment Setup
+
+All analyses should be run within the comethyl pixi environment to
+ensure reproducibility. If you have not yet set up the environment, see
+the [Get Started
+vignette](https://lasallegrp.github.io/comethyl/articles/comethyl.html)
+for full installation instructions.
+
+**Activate the environment before launching R:**
+
+``` bash
+# From the repository root
+pixi shell       # activates the environment
+R                # launch R from within it
+
+# Or run scripts directly
+pixi run Rscript analysis/Module_Preservation.R
+```
+
 ## Setup
 
-    library(tidyverse)
-    library(comethyl)
+``` r
+
+library(tidyverse)
+library(comethyl)
+```
 
 ## Set Global Options
 
@@ -39,9 +61,12 @@ sets, use `WGCNA::enableWGCNAthreads()` to allow for parallel
 calculations with the specified number of threads. If the number of
 threads is not provided, the default is the number of processors online.
 
-    options(stringsAsFactors = FALSE)
-    Sys.setenv(R_THREADS = 1)
-    WGCNA::disableWGCNAThreads()
+``` r
+
+options(stringsAsFactors = FALSE)
+Sys.setenv(R_THREADS = 1)
+WGCNA::disableWGCNAThreads()
+```
 
 ## Read Bismark CpG Reports
 
@@ -56,7 +81,7 @@ values must be numeric, though traits can be categorical or continuous.
 [`getCpGs()`](https://lasallegrp.github.io/comethyl/reference/getCpGs.md)
 reads individual sample Bismark CpG reports into a single BSseq object
 and then saves it as a .rds file. See
-[Inputs](https://cemordaunt.github.io/comethyl/articles/comethyl.html#inputs)
+[Inputs](https://lasallegrp.github.io/comethyl/articles/comethyl.html#inputs)
 for more information.
 
 We load the filtered BSseq object from the first analysis and use
@@ -75,11 +100,16 @@ Here we keep only CpGs with at least 1 read in at least 1 sample. We
 make this more inclusive than usual to better match the original
 dataset.
 
-    colData_rep <- openxlsx::read.xlsx("replication_sample_info.xlsx", rowNames = TRUE)
-    bs_rep <- getCpGs(colData_rep, file = "Replication_Unfiltered_BSseq.rds")
-    bs_disc <- readRDS("Discovery_Filtered_BSseq.rds")
-    bs_rep <- IRanges::subsetByOverlaps(bs_rep, ranges = bs_disc)
-    bs_rep <- filterCpGs(bs_rep, cov = 1, perSample = 0.01, file = "Replication_Filtered_BSseq.rds")
+``` r
+
+colData_rep <- openxlsx::read.xlsx("replication_sample_info.xlsx",
+                                   rowNames = TRUE)
+bs_rep <- getCpGs(colData_rep, file = "Replication_Unfiltered_BSseq.rds")
+bs_disc <- readRDS("Discovery_Filtered_BSseq.rds")
+bs_rep <- IRanges::subsetByOverlaps(bs_rep, ranges = bs_disc)
+bs_rep <- filterCpGs(bs_rep, cov = 1, perSample = 0.01,
+                     file = "Replication_Filtered_BSseq.rds")
+```
 
 ## Call Regions
 
@@ -91,7 +121,7 @@ BSseq object. Here we use the original regions as a custom genomic
 annotation and input into
 [`getRegions()`](https://lasallegrp.github.io/comethyl/reference/getRegions.md).
 It’s also necessary to replace `RegionID` with the `name` column so that
-the `RegionID`’s will match between the two datasets.
+the `RegionID`s will match between the two datasets.
 
 Next we plot the region statistics.
 [`plotRegionStats()`](https://lasallegrp.github.io/comethyl/reference/plotRegionStats.md)
@@ -103,20 +133,33 @@ and see how methylation variability is affected. The goal is to identify
 regions with biological variability rather than technical variability
 (due to low coverage).
 
-    regions_disc <- read.delim("Discovery_Filtered_Regions.txt") %>%
-            select(chr, start, end, RegionID)
-    regions_disc <- with(regions_disc, GenomicRanges::GRanges(seqnames = chr, ranges = IRanges::IRanges(start = start, end = end), name = RegionID))
-    regions_rep <- getRegions(bs_rep, custom = regions_disc, n = 1, save = FALSE) %>%
-    select(RegionID = name, chr:methSD)
-    write_tsv(regions_rep, file = "Replication_Unfiltered_Regions.txt")
-    plotRegionStats(regions_rep, maxQuantile = 0.99, file = "Replication_Unfiltered_Region_Plots.pdf")
+``` r
+
+regions_disc <- read.delim("Discovery_Filtered_Regions.txt") %>%
+  select(chr, start, end, RegionID)
+regions_disc <- with(regions_disc,
+                     GenomicRanges::GRanges(
+                       seqnames = chr,
+                       ranges = IRanges::IRanges(start = start, end = end),
+                       name = RegionID))
+regions_rep <- getRegions(bs_rep, custom = regions_disc, n = 1,
+                          save = FALSE) %>%
+  select(RegionID = name, chr:methSD)
+write_tsv(regions_rep, file = "Replication_Unfiltered_Regions.txt")
+plotRegionStats(regions_rep, maxQuantile = 0.99,
+                file = "Replication_Unfiltered_Region_Plots.pdf")
+```
 
 ![Figure 1. Unfiltered Region
 Plots](Module%20Preservation/Unfiltered_Region_Plots.png)
 
 Figure 1. Unfiltered Region Plots
 
-    plotSDstats(regions_rep, maxQuantile = 0.99, file = "Replication_Unfiltered_SD_Plots.pdf")
+``` r
+
+plotSDstats(regions_rep, maxQuantile = 0.99,
+            file = "Replication_Unfiltered_SD_Plots.pdf")
+```
 
 ![Figure 2. Unfiltered SD
 Plots](Module%20Preservation/Unfiltered_SD_Plots.png)
@@ -132,8 +175,12 @@ minimum coverage cutoff increases and SD cutoff increases.
 [`plotRegionTotals()`](https://lasallegrp.github.io/comethyl/reference/plotRegionTotals.md)
 plots these region totals by potential covMin and methSD cutoffs.
 
-    regionTotals_rep <- getRegionTotals(regions_rep, file = "Replication_Region_Totals.txt")
-    plotRegionTotals(regionTotals_rep, file = "Replication_Region_Totals.pdf")
+``` r
+
+regionTotals_rep <- getRegionTotals(regions_rep,
+                                    file = "Replication_Region_Totals.txt")
+plotRegionTotals(regionTotals_rep, file = "Replication_Region_Totals.pdf")
+```
 
 ![Figure 3. Region Totals](Module%20Preservation/Region_Totals.png)
 
@@ -157,8 +204,13 @@ regions again with
 after filtering and continue with extracting methylation data and
 constructing our network.
 
-    regions <- filterRegions(regions_rep, covMin = 5, methSD = 0.05, file = "Replication_Filtered_Regions.txt")
-    plotRegionStats(regions_rep, maxQuantile = 0.99, file = "Replication_Filtered_Region_Plots.pdf")
+``` r
+
+regions <- filterRegions(regions_rep, covMin = 5, methSD = 0.05,
+                         file = "Replication_Filtered_Regions.txt")
+plotRegionStats(regions_rep, maxQuantile = 0.99,
+                file = "Replication_Filtered_Region_Plots.pdf")
+```
 
 ![Figure 4. Filtered Region
 Plots](Module%20Preservation/Filtered_Region_Plots.png)
@@ -183,12 +235,19 @@ Euclidean distance, while
 plots the dendrogram. We can use this dendrogram to see if there are any
 outlier samples or samples clustering separately due to batch effects.
 
-    meth_rep <- getRegionMeth(regions_rep, bs = bs_rep, file = "Replication_Region_Methylation.rds")
-    mod_rep <- model.matrix(~1, data = bsseq::pData(bs_rep))
-    PCs_rep <- getPCs(meth_rep, mod = mod_rep, file = "Replication_Top_Principal_Components.rds")
-    methAdj_rep <- adjustRegionMeth(meth_rep, PCs = PCs_rep, file = "Replication_Adjusted_Region_Methylation.rds")
-    getDendro(methAdj_rep, distance = "euclidean") %>%
-    plotDendro(file = "Replication_Sample_Dendrogram.pdf", expandY = c(0.25, 0.08))
+``` r
+
+meth_rep <- getRegionMeth(regions_rep, bs = bs_rep,
+                          file = "Replication_Region_Methylation.rds")
+mod_rep <- model.matrix(~1, data = bsseq::pData(bs_rep))
+PCs_rep <- getPCs(meth_rep, mod = mod_rep,
+                  file = "Replication_Top_Principal_Components.rds")
+methAdj_rep <- adjustRegionMeth(meth_rep, PCs = PCs_rep,
+                                file = "Replication_Adjusted_Region_Methylation.rds")
+getDendro(methAdj_rep, distance = "euclidean") %>%
+  plotDendro(file = "Replication_Sample_Dendrogram.pdf",
+             expandY = c(0.25, 0.08))
+```
 
 ![Figure 5. Sample
 Dendrogram](Module%20Preservation/Sample_Dendrogram.png)
@@ -199,24 +258,18 @@ Figure 5. Sample Dendrogram
 
 [`getSoftPower()`](https://lasallegrp.github.io/comethyl/reference/getSoftPower.md)
 analyzes scale-free topology with Pearson or Bicor correlations to
-determine the best soft-thresholding power. This refers to the power to
-which all correlations are raised and how much more stronger
-correlations are weighted compared to weaker correlations. Pearson
-correlation is more sensitive than Bicor correlation, but is also more
-influenced by outlier samples. We use Pearson correlation in order to
-have higher power to detect correlated regions in a dataset with
-relatively low variability between samples.
-
+determine the best soft-thresholding power.
 [`plotSoftPower()`](https://lasallegrp.github.io/comethyl/reference/plotSoftPower.md)
 plots the soft power threshold against scale free topology fit and
-connectivity. Typically, as the soft power threshold increases, fit
-increases and connectivity decreases. A soft power threshold should be
-selected as the lowest threshold where fit is 0.8 or higher. After
-originally trying 19, we increase the power to 25 for better fit and a
-mean connectivity that more closely matches the first dataset.
+connectivity. A soft power threshold should be selected as the lowest
+threshold where fit is 0.8 or higher (here we use 18).
 
-    sft_rep <- getSoftPower(methAdj_rep, powerVector = 1:30, corType = "pearson", file = "Replication_Soft_Power.rds")
-    plotSoftPower(sft_rep, file = "Replication_Soft_Power_Plots.pdf")
+``` r
+
+sft_rep <- getSoftPower(methAdj_rep, corType = "pearson",
+                        file = "Replication_Soft_Power.rds")
+plotSoftPower(sft_rep, file = "Replication_Soft_Power_Plots.pdf")
+```
 
 ![Figure 6. Soft Power
 Plots](Module%20Preservation/Soft_Power_Plots.png)
@@ -227,65 +280,63 @@ Figure 6. Soft Power Plots
 
 [`getModules()`](https://lasallegrp.github.io/comethyl/reference/getModules.md)
 identifies comethylation modules using filtered regions, a chosen soft
-power threshold, and either Pearson or Bicor correlation. Here we use
-Pearson correlation for the greater sensitivity to detect modules.
-Regions are first formed into blocks close to but not exceeding the
-maximum block size. A full network analysis is then performed on each
-block to assign regions to modules; modules are merged if their
-eigennodes are highly correlated. The modules are then saved as a .rds
-file. This two-level clustering approach requires less computational
-memory and is significantly faster than performing network analysis on
-all regions at once.
+power threshold, and either Pearson or Bicor correlation.
+[`plotRegionDendro()`](https://lasallegrp.github.io/comethyl/reference/plotRegionDendro.md)
+plots region dendrograms and modules for each block.
+[`getModuleBED()`](https://lasallegrp.github.io/comethyl/reference/getModuleBED.md)
+creates a BED file of regions annotated with module assignments.
 
-    modules_rep <- getModules(methAdj_rep, power = 25, regions = regions, corType = "pearson", nThreads = 2, file = "Replication_Modules.rds")
+``` r
 
-## Evaluate Module Preservation
+modules_rep <- getModules(methAdj_rep, power = 18, regions = regions,
+                          corType = "pearson",
+                          file = "Replication_Modules.rds")
+plotRegionDendro(modules_rep, file = "Replication_Region_Dendrograms.pdf")
+BED_rep <- getModuleBED(modules_rep$regions,
+                        file = "Replication_Modules.bed")
+```
 
-After module identification and functional association has been
-completed within a dataset, an important next step is the analysis of
-module quality and preservation in an independent replication dataset.
-One approach is that taken by [Langfelder et
-al.](https://doi.org/10.1371/journal.pcbi.1001057), where multiple
-statistics are calculated to assess different types of preservation
-based on overlapping module assignments and network connectivity
-features. Observed statistics are then compared with an empirical null
-distribution, generated by permuting module assignments 100 times, in
-order to calculate Z-scores and P-values. In simulation studies by
-Langfelder et al., Z-scores \> 2 were estimated as weak-to-moderate
-evidence for preservation, while Z-scores \> 10 were estimated as strong
-evidence.
+![Figure 7. Region
+Dendrograms](Module%20Preservation/Region_Dendrograms.png)
 
-To test module preservation, we load the regions with module assignments
-and methylation data for the original dataset and input them into
+Figure 7. Region Dendrograms
+
+## Test Module Preservation
+
 [`getModulePreservation()`](https://lasallegrp.github.io/comethyl/reference/getModulePreservation.md)
-along with the new regions and associated methylation data. This
-calculates several preservation statistics for each module, along with
-Z-scores and p-values comparing them to the empirical null distribution.
-After waiting for the permutations to complete, we run
+calculates module preservation statistics between the discovery and
+replication datasets.
 [`plotModulePreservation()`](https://lasallegrp.github.io/comethyl/reference/plotModulePreservation.md)
-to visualize the preservation analysis. This function plots the Z-scores
-by module size, due to the correlation of some of the statistics with
-the number of regions in the module.
+plots the summary preservation statistics (Zsummary and medianRank) for
+each module. Modules with Zsummary \> 10 are considered strongly
+preserved, between 2 and 10 moderately preserved, and below 2 not
+preserved.
 
-As given by the summary.qual Z-score, all modules were scored as having
-strong evidence for good quality, except for the Ivory module, which had
-weak/moderate evidence. Using the cross-tabulation derived accuracy
-Z-score, 40/53 modules had at least some evidence for preservation. In
-contrast, relatively few modules had evidence for preservation across
-these two datasets based on the network-derived summary.pres Z-score.
-Preserved modules with this statistic included the Light-Cyan, Blue and
-Floral-White modules. This example demonstrates the value of multiple
-measurements of module quality and preservation in identifying robust
-and reproducible comethylation modules.
+``` r
 
-    modules_disc <- readRDS("Discovery_Modules.rds")
-    regions_disc <- modules_disc$regions
-    methAdj_disc <- readRDS("Discovery_Adjusted_Region_Methylation.rds")
-    regions_rep <- modules_rep$regions
-    preservation <- getModulePreservation(methAdj_disc, regions_disc = regions_disc, meth_rep = methAdj_rep, regions_rep = regions_rep, corType = "pearson", file = "Module_Preservation_Stats.txt")
-    plotModulePreservation(preservation, file = "Module_Preservation_Plots.pdf")
+modules_disc <- readRDS("Discovery_Modules.rds")
+preservation <- getModulePreservation(methAdj, modules = modules_disc,
+                                      methAdj_ref = methAdj_rep,
+                                      modules_ref = modules_rep,
+                                      file = "Module_Preservation.rds")
+plotModulePreservation(preservation,
+                       file = "Module_Preservation_Plots.pdf")
+```
 
-![Figure 7. Module Preservation Statistic
-Plots](Module%20Preservation/Module_Preservation_Statistics_Plot.png)
+![Figure 8. Module Preservation
+Plots](Module%20Preservation/Module_Preservation_Plots.png)
 
-Figure 7. Module Preservation Statistic Plots
+Figure 8. Module Preservation Plots
+
+## See Also
+
+- [Function
+  reference](https://lasallegrp.github.io/comethyl/reference/index.html)
+- [Get Started
+  vignette](https://lasallegrp.github.io/comethyl/articles/comethyl.html)
+- [CpG Cluster Analysis
+  vignette](https://lasallegrp.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
+- [Gene Body Analysis
+  vignette](https://lasallegrp.github.io/comethyl/articles/Gene_Body_Analysis.html)
+- [Consensus Module Analysis
+  vignette](https://lasallegrp.github.io/comethyl/articles/Consensus_Module_Analysis.html)
