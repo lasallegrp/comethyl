@@ -39,7 +39,7 @@ pixi shell       # activates the environment
 R                # launch R from within it
 
 # Or run scripts directly
-pixi run Rscript analysis/CpG_Cluster_Analysis.R
+pixi run Rscript scripts/CpG_Cluster_Analysis.R
 ```
 
 ## Setup
