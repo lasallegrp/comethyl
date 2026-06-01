@@ -327,7 +327,7 @@ the correct R and library paths are used.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">pixi</span> shell   <span class="co"># activates the environment in your current shell</span></span>
 <span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">R</span>            <span class="co"># launches R from within it</span></span></code></pre></div>
 <p><strong>Run a script directly:</strong></p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">pixi</span> run Rscript analysis/01_prepare_data.R</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">pixi</span> run Rscript scripts/01_prepare_data.R</span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="reproducibility-note">Reproducibility note<a class="anchor" aria-label="anchor" href="#reproducibility-note"></a>
@@ -349,7 +349,21 @@ environment)<a class="anchor" aria-label="anchor" href="#option-2-remotes-quick-
 to use pixi, you can install comethyl directly from GitHub:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, <span class="st">"remotes"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"lasallegrp/comethyl"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install Bioconductor dependencies first if needed</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"bsseq"</span>,</span>
+<span>  <span class="st">"GenomicRanges"</span>,</span>
+<span>  <span class="st">"IRanges"</span>,</span>
+<span>  <span class="st">"annotatr"</span>,</span>
+<span>  <span class="st">"WGCNA"</span>,</span>
+<span>  <span class="st">"sva"</span>,</span>
+<span>  <span class="st">"rGREAT"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install comethyl from GitHub</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"lasallegrp/comethyl"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://lasallegrp.github.io/comethyl/">comethyl</a></span><span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>Note:</strong> This installs into your system or user R
