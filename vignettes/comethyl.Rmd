@@ -213,7 +213,7 @@ R            # launches R from within it
 **Run a script directly:**
 
 ```bash
-pixi run Rscript analysis/01_prepare_data.R
+pixi run Rscript scripts/01_prepare_data.R
 ```
 
 #### Reproducibility note
@@ -232,7 +232,21 @@ pixi, you can install comethyl directly from GitHub:
 
 ```r
 install.packages(c("BiocManager", "remotes"))
-BiocManager::install("lasallegrp/comethyl")
+
+# Install Bioconductor dependencies first if needed
+BiocManager::install(c(
+  "bsseq",
+  "GenomicRanges",
+  "IRanges",
+  "annotatr",
+  "WGCNA",
+  "sva",
+  "rGREAT"
+))
+
+# Install comethyl from GitHub
+remotes::install_github("lasallegrp/comethyl", dependencies = TRUE)
+
 library(comethyl)
 ```
 
