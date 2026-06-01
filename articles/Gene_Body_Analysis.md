@@ -325,93 +325,213 @@ Dendrograms](Gene%20Body%20Analysis/Region_Dendrograms.png)
 
 Figure 8. Region Dendrograms
 
-## Correlate Modules with Sample Traits
+## Examine Correlations between Modules and Samples
 
+In order to examine relationships between modules, `getDendro(MEs)`
+clusters modules based on eigennode values using Bicor or Pearson
+correlations, which are then plotted with
+[`plotDendro()`](https://lasallegrp.github.io/comethyl/reference/plotDendro.md).
+`getCor(MEs)` calculates a correlation matrix for module eigennodes
+using Bicor or Pearson correlations, which are then plotted with
+[`plotHeatmap()`](https://lasallegrp.github.io/comethyl/reference/plotHeatmap.md).
+We use Bicor correlations at this stage to identify robust associations
+with less impact of outliers. Note that module correlation statistics
+(with p-values) can also be calculated with
+[`getMEtraitCor()`](https://lasallegrp.github.io/comethyl/reference/getMEtraitCor.md).
+We can use these plots to identify groups of correlated modules.
+
+    MEs <- modules$MEs
+    moduleDendro <- getDendro(MEs, distance = "bicor")
+    plotDendro(moduleDendro, labelSize = 5, nBreaks = 5, file = "Module_ME_Dendrogram.pdf")
+
+![Figure 9. Module ME
+Dendrogram](Gene%20Body%20Analysis/Module_ME_Dendrogram.png)
+
+Figure 9. Module ME Dendrogram
+
+    moduleCor <- getCor(MEs, corType = "bicor")
+    plotHeatmap(moduleCor, rowDendro = moduleDendro, colDendro = moduleDendro, file = "Module_Correlation_Heatmap.pdf")
+    moduleCorStats <- getMEtraitCor(MEs, colData = MEs, corType = "bicor", robustY = TRUE, file = "Module_Correlation_Stats.txt")
+
+![Figure 10. Module Correlation
+Heatmap](Gene%20Body%20Analysis/Module_Correlation_Heatmap.png)
+
+Figure 10. Module Correlation Heatmap
+
+To explore associations between samples,
+`getDendro(MEs, transpose = TRUE)` clusters the samples based on module
+eigennode values using Bicor or Pearson correlations, which are then
+plotted with
+[`plotDendro()`](https://lasallegrp.github.io/comethyl/reference/plotDendro.md).
+`getCor(MEs, transpose = TRUE)` calculates a correlation matrix for
+samples based on module eigennode vales using Bicor or Pearson
+correlations, which are then plotted with
+[`plotHeatmap()`](https://lasallegrp.github.io/comethyl/reference/plotHeatmap.md).
+[`plotHeatmap()`](https://lasallegrp.github.io/comethyl/reference/plotHeatmap.md)
+can also be used to visualize module eigennode values for each sample as
+below. These plots can be useful to identify sets of samples with
+correlated methylation at these regions. This may also reveal the impact
+of batch effects on the identified modules.
+
+    sampleDendro <- getDendro(MEs, transpose = TRUE, distance = "bicor")
+    plotDendro(sampleDendro, labelSize = 3, nBreaks = 5, file = "Sample_ME_Dendrogram.pdf")
+
+![Figure 11. Sample ME
+Dendrogram](Gene%20Body%20Analysis/Sample_ME_Dendrogram.png)
+
+Figure 11. Sample ME Dendrogram
+
+    sampleCor <- getCor(MEs, transpose = TRUE, corType = "bicor")
+    plotHeatmap(sampleCor, rowDendro = sampleDendro, colDendro = sampleDendro, file = "Sample_Correlation_Heatmap.pdf")
+
+![Figure 12. Sample Correlation
+Heatmap](Gene%20Body%20Analysis/Sample_Correlation_Heatmap.png)
+
+Figure 12. Sample Correlation Heatmap
+
+    plotHeatmap(MEs, rowDendro = sampleDendro, colDendro = moduleDendro, legend.title = "Module\nEigennode", legend.position = c(0.37,0.89), file = "Sample_ME_Heatmap.pdf")
+
+![Figure 13. Sample ME
+Heatmap](Gene%20Body%20Analysis/Sample_ME_Heatmap.png)
+
+Figure 13. Sample ME Heatmap
+
+## Test Correlations between Module Eigennodes and Sample Traits
+
+Next we can look for modules associated with sample traits.
 [`getMEtraitCor()`](https://lasallegrp.github.io/comethyl/reference/getMEtraitCor.md)
-correlates module eigennodes with sample traits and saves the results as
-a tab-separated text file.
+tests associations between module eigennodes and sample traits using
+Bicor or Pearson correlation.
+[`getCor()`](https://lasallegrp.github.io/comethyl/reference/getCor.md)
+calculates a correlation matrix for sample traits using Bicor or Pearson
+correlations, which are clustered with
+[`getDendro()`](https://lasallegrp.github.io/comethyl/reference/getDendro.md),
+and then plotted with
+[`plotDendro()`](https://lasallegrp.github.io/comethyl/reference/plotDendro.md).
+This allows us to identify correlated traits and order both traits and
+modules on the heatmap by similarity.
 [`plotMEtraitCor()`](https://lasallegrp.github.io/comethyl/reference/plotMEtraitCor.md)
-plots the correlation between module eigennodes and sample traits as a
-heatmap.
+creates a heatmap of sample traits versus modules. To focus on the top
+associations, another heatmap is created showing only the top 15
+associations by p-value. Significant associations can be identified by a
+star or the p-value itself. Here we identify significant correlations
+between several modules and sample traits including cell type
+proportions, genome-wide methylation, and even home ownership.
 
-``` r
+    MEtraitCor <- getMEtraitCor(MEs, colData = colData, corType = "bicor", file = "ME_Trait_Correlation_Stats.txt")
+    traitDendro <- getCor(MEs, y = colData, corType = "bicor", robustY = FALSE) %>% getDendro(transpose = TRUE)
+    plotDendro(traitDendro, labelSize = 3.5, expandY = c(0.65,0.08), file = "Trait_Dendrogram.pdf")
 
-MEs <- modules$MEs
-colData <- openxlsx::read.xlsx("sample_info.xlsx", rowNames = TRUE)
-MEtraitCor <- getMEtraitCor(MEs, colData = colData, corType = "pearson",
-                            file = "ME_Trait_Correlation.txt")
-traitDendro <- getDendro(colData, distance = "bicor")
-plotMEtraitCor(MEtraitCor, moduleOrder = modules$modules$module,
-               traitDendro = traitDendro,
-               file = "ME_Trait_Correlation_Heatmap.pdf")
-```
+![Figure 14. Trait
+Dendrogram](Gene%20Body%20Analysis/Trait_Dendrogram.png)
 
-![Figure 9. ME Trait Correlation
+Figure 14. Trait Dendrogram
+
+    plotMEtraitCor(MEtraitCor, moduleOrder = moduleDendro$order, traitOrder = traitDendro$order, file = "ME_Trait_Correlation_Heatmap.pdf")
+
+![Figure 15. ME Trait Correlation
 Heatmap](Gene%20Body%20Analysis/ME_Trait_Correlation_Heatmap.png)
 
-Figure 9. ME Trait Correlation Heatmap
+Figure 15. ME Trait Correlation Heatmap
 
-## Explore Significant Module-Trait Correlations
+    plotMEtraitCor(MEtraitCor, moduleOrder = moduleDendro$order, traitOrder = traitDendro$order, topOnly = TRUE, label.type = "p", label.size = 4, label.nudge_y = 0, legend.position = c(1.14, 0.745), colColorMargins = c(-1,5.1,0.5,10.47), file = "Top_ME_Trait_Correlation_Heatmap.pdf", width = 7, height = 3.5)
 
+![Figure 16. Top ME Trait Correlation
+Heatmap](Gene%20Body%20Analysis/Top_ME_Trait_Correlation_Heatmap.png)
+
+Figure 16. Top ME Trait Correlation Heatmap
+
+## Explore Significant Module Eigennode - Trait Correlations
+
+### Plot Module Eigennodes vs Traits
+
+To further investigate top module-trait associations,
 [`plotMEtraitDot()`](https://lasallegrp.github.io/comethyl/reference/plotMEtraitDot.md)
-plots module eigennode values by trait for a single module and trait.
-[`plotMethTrait()`](https://lasallegrp.github.io/comethyl/reference/plotMethTrait.md)
-plots methylation values for regions in a module by trait, showing
-individual sample values.
+creates a dotplot of a module eigennode by a categorical trait, while
+[`plotMEtraitScatter()`](https://lasallegrp.github.io/comethyl/reference/plotMEtraitScatter.md)
+creates a scatterplot of a module eigennode by a continuous trait. Any
+module and any sample trait can be selected. These plots can help verify
+that the module-trait association is robust and identify any outlier
+samples. Here we see that the green yellow module has lower methylation
+with increasing amounts of granulocytes, but higher methylation with
+home ownership.
 
-``` r
+    plotMEtraitScatter(MEs$greenyellow, trait = colData$Gran, ylim = c(-0.25,0.25), xlab = "Granulocytes", ylab = "Green Yellow Module Eigennode", file = "greenyellow_ME_Granulocytes_Scatterplot.pdf")
 
-plotMEtraitDot(MEs$MEblue, trait = colData$Diagnosis_ASD,
-               traitCode = c("TD" = 0, "ASD" = 1),
-               colors = c("TD" = "#3366CC", "ASD" = "#FF3366"),
-               file = "Blue_ME_Diagnosis_Dot.pdf",
-               xlabel = "Diagnosis", ylabel = "Blue Module Eigennode")
-plotMethTrait(methAdj, regions = regions, modules = modules,
-              module = "blue", trait = colData$Diagnosis_ASD,
-              traitCode = c("TD" = 0, "ASD" = 1),
-              traitColors = c("TD" = "#3366CC", "ASD" = "#FF3366"),
-              file = "Blue_Module_Methylation_Heatmap.pdf")
-```
+![Figure 17. Green Yellow ME Granulocytes
+Dotplot](Gene%20Body%20Analysis/greenyellow_ME_Granulocytes_Scatterplot.png)
 
-![Figure 10. Blue ME Diagnosis Dot
-Plot](Gene%20Body%20Analysis/Blue_ME_Diagnosis_Dot.png)
+Figure 17. Green Yellow ME Granulocytes Dotplot
 
-Figure 10. Blue ME Diagnosis Dot Plot
+    plotMEtraitDot(MEs$greenyellow, trait = colData$home_ownership, binwidth = 0.015, traitCode = c("No" = 0, "Yes" = 1), colors = c("No" = "#3366CC", "Yes" = "#FF3366"), ylim = c(-0.25,0.25), xlab = "Home Ownership", nBreaks = 5, ylab = "Green Yellow Module Eigennode", file = "greenyellow_ME_Home_Ownership_Dotplot.pdf")
 
-![Figure 11. Blue Module Methylation
-Heatmap](Gene%20Body%20Analysis/Blue_Module_Methylation_Heatmap.png)
+![Figure 18. Green Yellow ME Home Ownership
+Dotplot](Gene%20Body%20Analysis/greenyellow_ME_Home_Ownership_Dotplot.png)
 
-Figure 11. Blue Module Methylation Heatmap
+Figure 18. Green Yellow ME Home Ownership Dotplot
 
-## Annotate Modules and Perform Enrichment Analysis
+### Plot Region Methylation vs Traits
+
+Next we dig further into the data and plot the raw methylation values
+against a sample trait using
+[`plotMethTrait()`](https://lasallegrp.github.io/comethyl/reference/plotMethTrait.md).
+These values are not adjusted by principal components, just centered on
+the mean methylation for each region. This allows you to see the change
+in actual methylation across regions in a module in relation to a trait.
+We plot the same associations as above.
+
+    regions <- modules$regions
+    plotMethTrait("greenyellow", regions = regions, meth = meth, trait = colData$Gran, expandY = 0.04, trait.legend.title = "Granulocytes", trait.legend.position = c(1.034,3.35), traitMargins = c(0,6,1,4.6), file = "greenyellow_Module_Methylation_Granulocytes_Heatmap.pdf")
+
+![Figure 19. Green Yellow Module Methylation Granulocytes
+Heatmap](Gene%20Body%20Analysis/greenyellow_Module_Methylation_Granulocytes_Heatmap.png)
+
+Figure 19. Green Yellow Module Methylation Granulocytes Heatmap
+
+    plotMethTrait("greenyellow", regions = regions, meth = meth, trait = colData$home_ownership, expandY = 0.04, traitCode = c("No" = 0, "Yes" = 1), traitColors = c("No" = "#3366CC", "Yes" = "#FF3366"), trait.legend.title = "Home Ownership", trait.legend.position = c(1.05,4.39), traitMargins = c(0,6,1,4.6), file = "greenyellow_Module_Methylation_Home_Ownership_Heatmap.pdf")
+
+![Figure 20. Green Yellow Module Methylation Home Ownership
+Heatmap](Gene%20Body%20Analysis/greenyellow_Module_Methylation_Home_Ownership_Heatmap.png)
+
+Figure 20. Green Yellow Module Methylation Home Ownership Heatmap
+
+## Annotate Modules
 
 [`annotateModule()`](https://lasallegrp.github.io/comethyl/reference/annotateModule.md)
-annotates regions in a module with gene and CpG island context.
+annotates a module of choice with nearby gene and CpG island context.
+Genes are added to regions using GREAT, gene info is added from BioMart,
+and both gene and CpG island context is added from `annotatr`.
 [`getGeneList()`](https://lasallegrp.github.io/comethyl/reference/getGeneList.md)
-extracts a list of genes from annotated regions.
-[`enrichModule()`](https://lasallegrp.github.io/comethyl/reference/enrichModule.md)
-performs enrichment analysis for a module using Enrichr,
+then extracts just the genes for that module, in the form of the gene
+symbol, description, Ensembl ID, or NCBI Entrez ID.
+
+    regionsAnno <- annotateModule(regions, module = c("greenyellow"), genome = "hg38", file = "Annotated_greenyellow_Module_Regions.txt")
+    geneList_greenyellow <- getGeneList(regionsAnno, module = "greenyellow")
+
+## Analyze Functional Enrichment
+
+Next we test our module of interest for enrichment in genes with
+particular functions.
 [`listOntologies()`](https://lasallegrp.github.io/comethyl/reference/listOntologies.md)
-lists available ontologies, and
+gets available ontologies for GREAT with the selected genome assembly.
+[`enrichModule()`](https://lasallegrp.github.io/comethyl/reference/enrichModule.md)
+analyzes functional enrichments for all regions assigned to the selected
+module, relative to the background set of all regions input into the
+network (including those assigned to the grey (unassigned) module).
 [`plotEnrichment()`](https://lasallegrp.github.io/comethyl/reference/plotEnrichment.md)
-plots the enrichment results.
+then plots the module enrichments from GREAT.
 
-``` r
+Using this approach, we see that the green yellow module is enriched for
+genes that play a role in glutamate receptor activity and respiration.
 
-regions_annotated <- annotateModule(regions, module = "blue",
-                                   genome = "hg38",
-                                   file = "Blue_Module_Annotated_Regions.txt")
-geneList <- getGeneList(regions_annotated, module = "blue")
-enrichment <- enrichModule(regions = regions, module = "blue",
-                          genome = "hg38",
-                          file = "Blue_Module_Enrichment.txt")
-plotEnrichment(enrichment, file = "Blue_Module_Enrichment.pdf")
-```
+    ontologies <- listOntologies("hg38", version = "4.0.4")
+    enrichment <- enrichModule(regions, module = "greenyellow", genome = "hg38", file = "greenyellow_Module_Enrichment.txt")
+    plotEnrichment(enrichment, file = "greenyellow_Module_Enrichment_Plot.pdf")
 
-![Figure 12. Blue Module
-Enrichment](Gene%20Body%20Analysis/Blue_Module_Enrichment.png)
+![Figure 21. Green Yellow Module Enrichment
+Plot](Gene%20Body%20Analysis/greenyellow_Module_Enrichment_Plot.png)
 
-Figure 12. Blue Module Enrichment
+Figure 21. Green Yellow Module Enrichment Plot
 
 ## See Also
 
