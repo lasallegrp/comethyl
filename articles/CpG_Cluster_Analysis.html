@@ -314,70 +314,192 @@ browser.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="correlate-modules-with-sample-traits">Correlate Modules with Sample Traits<a class="anchor" aria-label="anchor" href="#correlate-modules-with-sample-traits"></a>
+<h2 id="examine-correlations-between-modules-and-samples">Examine Correlations between Modules and Samples<a class="anchor" aria-label="anchor" href="#examine-correlations-between-modules-and-samples"></a>
 </h2>
-<p><code><a href="../reference/getMEtraitCor.html">getMEtraitCor()</a></code> correlates module eigennodes with sample
-traits and saves the results as a tab-separated text file.
-<code><a href="../reference/plotMEtraitCor.html">plotMEtraitCor()</a></code> plots the correlation between module
-eigennodes and sample traits as a heatmap.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">MEs</span> <span class="op">&lt;-</span> <span class="va">modules</span><span class="op">$</span><span class="va">MEs</span></span>
-<span><span class="va">colData</span> <span class="op">&lt;-</span> <span class="fu">read.xlsx</span><span class="op">(</span><span class="st">"sample_info.xlsx"</span>, rowNames <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">MEtraitCor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getMEtraitCor.html">getMEtraitCor</a></span><span class="op">(</span><span class="va">MEs</span>, colData <span class="op">=</span> <span class="va">colData</span>, corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
-<span>                            file <span class="op">=</span> <span class="st">"ME_Trait_Correlation.txt"</span><span class="op">)</span></span>
-<span><span class="va">traitDendro</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">colData</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span><span class="va">MEtraitCor</span>, moduleOrder <span class="op">=</span> <span class="va">modules</span><span class="op">$</span><span class="va">modules</span><span class="op">$</span><span class="va">module</span>,</span>
-<span>               traitDendro <span class="op">=</span> <span class="va">traitDendro</span>,</span>
-<span>               file <span class="op">=</span> <span class="st">"ME_Trait_Correlation_Heatmap.pdf"</span><span class="op">)</span></span></code></pre></div>
+<p>In order to examine relationships between modules,
+<code>getDendro(MEs)</code> clusters modules based on eigennode values
+using Bicor or Pearson correlations, which are then plotted with
+<code><a href="../reference/plotDendro.html">plotDendro()</a></code>. <code>getCor(MEs)</code> calculates a
+correlation matrix for module eigennodes using Bicor or Pearson
+correlations, which are then plotted with <code><a href="../reference/plotHeatmap.html">plotHeatmap()</a></code>. We
+use Bicor correlations at this stage to identify robust associations
+with less impact of outliers. Note that module correlation statistics
+(with p-values) can also be calculated with
+<code><a href="../reference/getMEtraitCor.html">getMEtraitCor()</a></code>. We can use these plots to identify large
+groups of modules with low correlation as well as highly correlated
+pairs (such as floral white and light cyan).</p>
+<pre><code><span><span class="va">MEs</span> <span class="op">&lt;-</span> <span class="va">modules</span><span class="op">$</span><span class="va">MEs</span></span>
+<span><span class="va">moduleDendro</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">MEs</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">moduleDendro</span>, labelSize <span class="op">=</span> <span class="fl">4</span>, nBreaks <span class="op">=</span> <span class="fl">5</span>, file <span class="op">=</span> <span class="st">"Module_ME_Dendrogram.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/ME_Trait_Correlation_Heatmap.png" alt="Figure 9. ME Trait Correlation Heatmap"><div class="figcaption">Figure 9. ME Trait Correlation Heatmap</div>
+<img src="CpG%20Cluster%20Analysis/Module_ME_Dendrogram.png" alt="Figure 9. Module ME Dendrogram"><div class="figcaption">Figure 9. Module ME Dendrogram</div>
+</div>
+<pre><code><span><span class="va">moduleCor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs</span>, corType <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">moduleCor</span>, rowDendro <span class="op">=</span> <span class="va">moduleDendro</span>, colDendro <span class="op">=</span> <span class="va">moduleDendro</span>, file <span class="op">=</span> <span class="st">"Module_Correlation_Heatmap.pdf"</span><span class="op">)</span></span>
+<span><span class="va">moduleCorStats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getMEtraitCor.html">getMEtraitCor</a></span><span class="op">(</span><span class="va">MEs</span>, colData <span class="op">=</span> <span class="va">MEs</span>, corType <span class="op">=</span> <span class="st">"bicor"</span>, robustY <span class="op">=</span> <span class="cn">TRUE</span>, file <span class="op">=</span> <span class="st">"Module_Correlation_Stats.txt"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/Module_Correlation_Heatmap.png" alt="Figure 10. Module Correlation Heatmap"><div class="figcaption">Figure 10. Module Correlation Heatmap</div>
+</div>
+<p>To explore associations between samples,
+<code>getDendro(MEs, transpose = TRUE)</code> clusters the samples based
+on module eigennode values using Bicor or Pearson correlations, which
+are then plotted with <code><a href="../reference/plotDendro.html">plotDendro()</a></code>.
+<code>getCor(MEs, transpose = TRUE)</code> calculates a correlation
+matrix for samples based on module eigennode vales using Bicor or
+Pearson correlations, which are then plotted with
+<code><a href="../reference/plotHeatmap.html">plotHeatmap()</a></code>. <code><a href="../reference/plotHeatmap.html">plotHeatmap()</a></code> can also be used
+to visualize module eigennode values for each sample as below. These
+plots can be useful to identify sets of samples with correlated
+methylation at these regions. This may also reveal the impact of batch
+effects on the identified modules.</p>
+<pre><code><span><span class="va">sampleDendro</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">MEs</span>, transpose <span class="op">=</span> <span class="cn">TRUE</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">sampleDendro</span>, labelSize <span class="op">=</span> <span class="fl">3</span>, nBreaks <span class="op">=</span> <span class="fl">5</span>, file <span class="op">=</span> <span class="st">"Sample_ME_Dendrogram.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/Sample_ME_Dendrogram.png" alt="Figure 11. Sample ME Dendrogram"><div class="figcaption">Figure 11. Sample ME Dendrogram</div>
+</div>
+<pre><code><span><span class="va">sampleCor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs</span>, transpose <span class="op">=</span> <span class="cn">TRUE</span>, corType <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">sampleCor</span>, rowDendro <span class="op">=</span> <span class="va">sampleDendro</span>, colDendro <span class="op">=</span> <span class="va">sampleDendro</span>, file <span class="op">=</span> <span class="st">"Sample_Correlation_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/Sample_Correlation_Heatmap.png" alt="Figure 12. Sample Correlation Heatmap"><div class="figcaption">Figure 12. Sample Correlation Heatmap</div>
+</div>
+<pre><code><span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">MEs</span>, rowDendro <span class="op">=</span> <span class="va">sampleDendro</span>, colDendro <span class="op">=</span> <span class="va">moduleDendro</span>, legend.title <span class="op">=</span> <span class="st">"Module\nEigennode"</span>, legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.37</span>,<span class="fl">0.89</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"Sample_ME_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/Sample_ME_Heatmap.png" alt="Figure 13. Sample ME Heatmap"><div class="figcaption">Figure 13. Sample ME Heatmap</div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="explore-significant-module-trait-correlations">Explore Significant Module-Trait Correlations<a class="anchor" aria-label="anchor" href="#explore-significant-module-trait-correlations"></a>
+<h2 id="test-correlations-between-module-eigennodes-and-sample-traits">Test Correlations between Module Eigennodes and Sample Traits<a class="anchor" aria-label="anchor" href="#test-correlations-between-module-eigennodes-and-sample-traits"></a>
 </h2>
-<p><code><a href="../reference/plotMEtraitDot.html">plotMEtraitDot()</a></code> plots module eigennode values by trait
-for a single module and trait. <code><a href="../reference/plotMethTrait.html">plotMethTrait()</a></code> plots
-methylation values for regions in a module by trait, showing individual
-sample values.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotMEtraitDot.html">plotMEtraitDot</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">MEblue</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Diagnosis_ASD</span>,</span>
-<span>               traitCode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="fl">0</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
-<span>               colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="st">"#3366CC"</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="st">"#FF3366"</span><span class="op">)</span>,</span>
-<span>               file <span class="op">=</span> <span class="st">"Blue_ME_Diagnosis_Dot.pdf"</span>,</span>
-<span>               xlabel <span class="op">=</span> <span class="st">"Diagnosis"</span>, ylabel <span class="op">=</span> <span class="st">"Blue Module Eigennode"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="va">methAdj</span>, regions <span class="op">=</span> <span class="va">regions</span>, modules <span class="op">=</span> <span class="va">modules</span>,</span>
-<span>              module <span class="op">=</span> <span class="st">"blue"</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Diagnosis_ASD</span>,</span>
-<span>              traitCode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="fl">0</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
-<span>              traitColors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="st">"#3366CC"</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="st">"#FF3366"</span><span class="op">)</span>,</span>
-<span>              file <span class="op">=</span> <span class="st">"Blue_Module_Methylation_Heatmap.pdf"</span><span class="op">)</span></span></code></pre></div>
+<p>Next we can look for modules associated with sample traits.
+<code><a href="../reference/getMEtraitCor.html">getMEtraitCor()</a></code> tests associations between module
+eigennodes and sample traits using Bicor or Pearson correlation.
+<code><a href="../reference/getCor.html">getCor()</a></code> calculates a correlation matrix for sample traits
+using Bicor or Pearson correlations, which are clustered with
+<code><a href="../reference/getDendro.html">getDendro()</a></code>, and then plotted with
+<code><a href="../reference/plotDendro.html">plotDendro()</a></code>. This allows us to identify correlated traits
+and order both traits and modules on the heatmap by similarity.
+<code><a href="../reference/plotMEtraitCor.html">plotMEtraitCor()</a></code> creates a heatmap of sample traits versus
+modules. To focus on the top associations, another heatmap is created
+showing only the top 15 associations by p-value. Significant
+associations can be identified by a star or the p-value itself. Here we
+identify significant correlations between several modules and sample
+traits including cell type proportions, study cohort, genome-wide
+methylation, and later autism diagnosis.</p>
+<pre><code><span><span class="va">MEtraitCor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getMEtraitCor.html">getMEtraitCor</a></span><span class="op">(</span><span class="va">MEs</span>, colData <span class="op">=</span> <span class="va">colData</span>, corType <span class="op">=</span> <span class="st">"bicor"</span>, file <span class="op">=</span> <span class="st">"ME_Trait_Correlation_Stats.txt"</span><span class="op">)</span></span>
+<span><span class="va">traitDendro</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs</span>, y <span class="op">=</span> <span class="va">colData</span>, corType <span class="op">=</span> <span class="st">"bicor"</span>, robustY <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span>transpose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">traitDendro</span>, labelSize <span class="op">=</span> <span class="fl">3.5</span>, expandY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.65</span>,<span class="fl">0.08</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"Trait_Dendrogram.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/Blue_ME_Diagnosis_Dot.png" alt="Figure 10. Blue ME Diagnosis Dot Plot"><div class="figcaption">Figure 10. Blue ME Diagnosis Dot Plot</div>
+<img src="CpG%20Cluster%20Analysis/Trait_Dendrogram.png" alt="Figure 14. Trait Dendrogram"><div class="figcaption">Figure 14. Trait Dendrogram</div>
 </div>
+<pre><code><span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span><span class="va">MEtraitCor</span>, moduleOrder <span class="op">=</span> <span class="va">moduleDendro</span><span class="op">$</span><span class="va">order</span>, traitOrder <span class="op">=</span> <span class="va">traitDendro</span><span class="op">$</span><span class="va">order</span>, file <span class="op">=</span> <span class="st">"ME_Trait_Correlation_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/Blue_Module_Methylation_Heatmap.png" alt="Figure 11. Blue Module Methylation Heatmap"><div class="figcaption">Figure 11. Blue Module Methylation Heatmap</div>
+<img src="CpG%20Cluster%20Analysis/ME_Trait_Correlation_Heatmap.png" alt="Figure 15. ME Trait Correlation Heatmap"><div class="figcaption">Figure 15. ME Trait Correlation Heatmap</div>
+</div>
+<pre><code><span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span><span class="va">MEtraitCor</span>, moduleOrder <span class="op">=</span> <span class="va">moduleDendro</span><span class="op">$</span><span class="va">order</span>, traitOrder <span class="op">=</span> <span class="va">traitDendro</span><span class="op">$</span><span class="va">order</span>, topOnly <span class="op">=</span> <span class="cn">TRUE</span>, label.type <span class="op">=</span> <span class="st">"p"</span>, label.size <span class="op">=</span> <span class="fl">4</span>, label.nudge_y <span class="op">=</span> <span class="fl">0</span>, legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.11</span>, <span class="fl">0.795</span><span class="op">)</span>, colColorMargins <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">4.75</span>,<span class="fl">0.5</span>,<span class="fl">10.1</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"Top_ME_Trait_Correlation_Heatmap.pdf"</span>, width <span class="op">=</span> <span class="fl">8.5</span>, height <span class="op">=</span> <span class="fl">4.25</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/Top_ME_Trait_Correlation_Heatmap.png" alt="Figure 16. Top ME Trait Correlation Heatmap"><div class="figcaption">Figure 16. Top ME Trait Correlation
+Heatmap</div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="annotate-modules-and-perform-enrichment-analysis">Annotate Modules and Perform Enrichment Analysis<a class="anchor" aria-label="anchor" href="#annotate-modules-and-perform-enrichment-analysis"></a>
+<h2 id="explore-significant-module-eigennode---trait-correlations">Explore Significant Module Eigennode - Trait Correlations<a class="anchor" aria-label="anchor" href="#explore-significant-module-eigennode---trait-correlations"></a>
 </h2>
-<p><code><a href="../reference/annotateModule.html">annotateModule()</a></code> annotates regions in a module with gene
-and CpG island context. <code><a href="../reference/getGeneList.html">getGeneList()</a></code> extracts a list of
-genes from annotated regions. <code><a href="../reference/enrichModule.html">enrichModule()</a></code> performs
-enrichment analysis for a module using Enrichr,
-<code><a href="../reference/listOntologies.html">listOntologies()</a></code> lists available ontologies, and
-<code><a href="../reference/plotEnrichment.html">plotEnrichment()</a></code> plots the enrichment results.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">regions_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annotateModule.html">annotateModule</a></span><span class="op">(</span><span class="va">regions</span>, module <span class="op">=</span> <span class="st">"blue"</span>,</span>
-<span>                                   genome <span class="op">=</span> <span class="st">"hg38"</span>,</span>
-<span>                                   file <span class="op">=</span> <span class="st">"Blue_Module_Annotated_Regions.txt"</span><span class="op">)</span></span>
-<span><span class="va">geneList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getGeneList.html">getGeneList</a></span><span class="op">(</span><span class="va">regions_annotated</span>, module <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span></span>
-<span><span class="va">enrichment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enrichModule.html">enrichModule</a></span><span class="op">(</span>regions <span class="op">=</span> <span class="va">regions</span>, module <span class="op">=</span> <span class="st">"blue"</span>,</span>
-<span>                          genome <span class="op">=</span> <span class="st">"hg38"</span>,</span>
-<span>                          file <span class="op">=</span> <span class="st">"Blue_Module_Enrichment.txt"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotEnrichment.html">plotEnrichment</a></span><span class="op">(</span><span class="va">enrichment</span>, file <span class="op">=</span> <span class="st">"Blue_Module_Enrichment.pdf"</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="plot-module-eigennodes-vs-traits">Plot Module Eigennodes vs Traits<a class="anchor" aria-label="anchor" href="#plot-module-eigennodes-vs-traits"></a>
+</h3>
+<p>To further investigate top module-trait associations,
+<code><a href="../reference/plotMEtraitDot.html">plotMEtraitDot()</a></code> creates a dotplot of a module eigennode by
+a categorical trait, while <code><a href="../reference/plotMEtraitScatter.html">plotMEtraitScatter()</a></code> creates a
+scatterplot of a module eigennode by a continuous trait. Any module and
+any sample trait can be selected. These plots can help verify that the
+module-trait association is robust and identify any outlier samples.
+Here we see that the bisque 4 module has lower methylation in ASD
+samples, while the pale turquoise module methylation correlates (in
+opposite directions) with the proportion of granulocytes and B
+cells.</p>
+<pre><code><span><span class="fu"><a href="../reference/plotMEtraitDot.html">plotMEtraitDot</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">bisque4</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Diagnosis_ASD</span>, traitCode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="fl">0</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="st">"#3366CC"</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="st">"#FF3366"</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.2</span>,<span class="fl">0.2</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Diagnosis"</span>, ylab <span class="op">=</span> <span class="st">"Bisque 4 Module Eigennode"</span>, file <span class="op">=</span> <span class="st">"bisque4_ME_Diagnosis_Dotplot.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/Blue_Module_Enrichment.png" alt="Figure 12. Blue Module Enrichment"><div class="figcaption">Figure 12. Blue Module Enrichment</div>
+<img src="CpG%20Cluster%20Analysis/bisque4_ME_Diagnosis_Dotplot.png" alt="Figure 17. Bisque4 ME Diagnosis Dotplot"><div class="figcaption">Figure 17. Bisque4 ME Diagnosis Dotplot</div>
+</div>
+<pre><code><span><span class="fu"><a href="../reference/plotMEtraitScatter.html">plotMEtraitScatter</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">paleturquoise</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Gran</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.15</span>,<span class="fl">0.15</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Granulocytes"</span>, ylab <span class="op">=</span> <span class="st">"Pale Turquoise Module Eigennode"</span>, file <span class="op">=</span> <span class="st">"paleturquoise_ME_Granulocytes_Scatterplot.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/paleturquoise_ME_Granulocytes_Scatterplot.png" alt="Figure 18. Pale Turquoise ME Granulocytes Scatterplot"><div class="figcaption">Figure 18. Pale Turquoise ME Granulocytes
+Scatterplot</div>
+</div>
+<pre><code><span><span class="fu"><a href="../reference/plotMEtraitScatter.html">plotMEtraitScatter</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">paleturquoise</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Bcell</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.15</span>,<span class="fl">0.15</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"B-cells"</span>, ylab <span class="op">=</span> <span class="st">"Pale Turquoise Module Eigennode"</span>, file <span class="op">=</span> <span class="st">"paleturquoise_ME_Bcells_Scatterplot.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/paleturquoise_ME_Bcells_Scatterplot.png" alt="Figure 19. Pale Turquoise ME B Cells Scatterplot"><div class="figcaption">Figure 19. Pale Turquoise ME B Cells
+Scatterplot</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="plot-region-methylation-vs-traits">Plot Region Methylation vs Traits<a class="anchor" aria-label="anchor" href="#plot-region-methylation-vs-traits"></a>
+</h3>
+<p>Next we dig further into the data and plot the raw methylation values
+against a sample trait using <code><a href="../reference/plotMethTrait.html">plotMethTrait()</a></code>. These values
+are not adjusted by principal components, just centered on the mean
+methylation for each region. This allows you to see the change in actual
+methylation across regions in a module in relation to a trait. We plot
+the same associations as above.</p>
+<pre><code><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="va">modules</span><span class="op">$</span><span class="va">regions</span></span>
+<span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="st">"bisque4"</span>, regions <span class="op">=</span> <span class="va">regions</span>, meth <span class="op">=</span> <span class="va">meth</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Diagnosis_ASD</span>, traitCode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="fl">0</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, traitColors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="st">"#3366CC"</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="st">"#FF3366"</span><span class="op">)</span>, trait.legend.title <span class="op">=</span> <span class="st">"Diagnosis"</span>, file <span class="op">=</span> <span class="st">"bisque4_Module_Methylation_Diagnosis_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/bisque4_Module_Methylation_Diagnosis_Heatmap.png" alt="Figure 20. Bisque4 Module Methylation Diagnosis Heatmap"><div class="figcaption">Figure 20. Bisque4 Module Methylation Diagnosis
+Heatmap</div>
+</div>
+<pre><code><span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="st">"paleturquoise"</span>, regions <span class="op">=</span> <span class="va">regions</span>, meth <span class="op">=</span> <span class="va">meth</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Gran</span>, expandY <span class="op">=</span> <span class="fl">0.04</span>, trait.legend.title <span class="op">=</span> <span class="st">"Granulocytes"</span>, trait.legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.034</span>,<span class="fl">3.35</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Methylation_Granulocytes_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Granulocytes_Heatmap.png" alt="Figure 21. Pale Turquoise Module Methylation Granulocytes Heatmap"><div class="figcaption">Figure 21. Pale Turquoise Module Methylation
+Granulocytes Heatmap</div>
+</div>
+<pre><code><span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="st">"paleturquoise"</span>, regions <span class="op">=</span> <span class="va">regions</span>, meth <span class="op">=</span> <span class="va">meth</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Bcell</span>, expandY <span class="op">=</span> <span class="fl">0.04</span>, trait.legend.title <span class="op">=</span> <span class="st">"B-cells"</span>, trait.legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.004</span>,<span class="fl">3.35</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Methylation_Bcells_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Bcells_Heatmap.png" alt="Figure 22. Pale Turquoise Module Methylation B-Cells Heatmap"><div class="figcaption">Figure 22. Pale Turquoise Module Methylation
+B-Cells Heatmap</div>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="annotate-modules">Annotate Modules<a class="anchor" aria-label="anchor" href="#annotate-modules"></a>
+</h2>
+<p><code><a href="../reference/annotateModule.html">annotateModule()</a></code> annotates a module of choice with
+nearby gene and CpG island context. Genes are added to regions using
+GREAT, gene info is added from BioMart, and both gene and CpG island
+context is added from <code>annotatr</code>. <code><a href="../reference/getGeneList.html">getGeneList()</a></code>
+then extracts just the genes for that module, in the form of the gene
+symbol, description, Ensembl ID, or NCBI Entrez ID.</p>
+<pre><code><span><span class="va">regionsAnno</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annotateModule.html">annotateModule</a></span><span class="op">(</span><span class="va">regions</span>, module <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bisque4"</span>, <span class="st">"paleturquoise"</span><span class="op">)</span>, genome <span class="op">=</span> <span class="st">"hg38"</span>, file <span class="op">=</span> <span class="st">"Annotated_bisque4_paleturquoise_Module_Regions.txt"</span><span class="op">)</span></span>
+<span><span class="va">geneList_bisque4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getGeneList.html">getGeneList</a></span><span class="op">(</span><span class="va">regionsAnno</span>, module <span class="op">=</span> <span class="st">"bisque4"</span><span class="op">)</span></span>
+<span><span class="va">geneList_paleturquoise</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getGeneList.html">getGeneList</a></span><span class="op">(</span><span class="va">regionsAnno</span>, module <span class="op">=</span> <span class="st">"paleturquoise"</span><span class="op">)</span></span></code></pre>
+</div>
+<div class="section level2">
+<h2 id="analyze-functional-enrichment">Analyze Functional Enrichment<a class="anchor" aria-label="anchor" href="#analyze-functional-enrichment"></a>
+</h2>
+<p>Next we test our modules of interest for enrichment in genes with
+particular functions. <code><a href="../reference/listOntologies.html">listOntologies()</a></code> gets available
+ontologies for GREAT with the selected genome assembly.
+<code><a href="../reference/enrichModule.html">enrichModule()</a></code> analyzes functional enrichments for all
+regions assigned to the selected module, relative to the background set
+of all regions input into the network (including those assigned to the
+grey (unassigned) module). <code><a href="../reference/plotEnrichment.html">plotEnrichment()</a></code> then plots the
+module enrichments from GREAT.</p>
+<p>Using this approach, we see that the bisque 4 module associated with
+ASD diagnosis is enriched for genes that play a role in glial
+differentiation and other neurodevelopmental processes. In contrast the
+pale turquoise module associated with the proportion of immune cell
+types is enriched for genes that function in the response to bacterial
+infection and other immune processes.</p>
+<pre><code><span><span class="va">ontologies</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/listOntologies.html">listOntologies</a></span><span class="op">(</span><span class="st">"hg38"</span>, version <span class="op">=</span> <span class="st">"4.0.4"</span><span class="op">)</span></span>
+<span><span class="va">enrich_bisque4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enrichModule.html">enrichModule</a></span><span class="op">(</span><span class="va">regions</span>, module <span class="op">=</span> <span class="st">"bisque4"</span>, genome <span class="op">=</span> <span class="st">"hg38"</span>, file <span class="op">=</span> <span class="st">"bisque4_Module_Enrichment.txt"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotEnrichment.html">plotEnrichment</a></span><span class="op">(</span><span class="va">enrich_bisque4</span>, file <span class="op">=</span> <span class="st">"bisque4_Module_Enrichment_Plot.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/bisque4_Module_Enrichment_Plot.png" alt="Figure 23. Bisque4 Module Enrichment Plot"><div class="figcaption">Figure 23. Bisque4 Module Enrichment Plot</div>
+</div>
+<pre><code><span><span class="va">enrich_paleturquoise</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enrichModule.html">enrichModule</a></span><span class="op">(</span><span class="va">regions</span>, module <span class="op">=</span> <span class="st">"paleturquoise"</span>, genome <span class="op">=</span> <span class="st">"hg38"</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Enrichment.txt"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotEnrichment.html">plotEnrichment</a></span><span class="op">(</span><span class="va">enrich_paleturquoise</span>, axis.text.y.size <span class="op">=</span> <span class="fl">14</span>, width <span class="op">=</span> <span class="fl">10</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Enrichment_Plot.pdf"</span><span class="op">)</span></span></code></pre>
+<div class="float">
+<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Enrichment_Plot.png" alt="Figure 24. Pale Turquoise Module Enrichment Plot"><div class="figcaption">Figure 24. Pale Turquoise Module Enrichment
+Plot</div>
 </div>
 </div>
 <div class="section level2">
