@@ -98,7 +98,7 @@ Started vignette</a> for full installation instructions.</p>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="ex">R</span>                <span class="co"># launch R from within it</span></span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co"># Or run scripts directly</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="ex">pixi</span> run Rscript analysis/Module_Preservation.R</span></code></pre></div>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="ex">pixi</span> run Rscript scripts/Module_Preservation.R</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
@@ -289,33 +289,52 @@ creates a BED file of regions annotated with module assignments.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">modules_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getModules.html">getModules</a></span><span class="op">(</span><span class="va">methAdj_rep</span>, power <span class="op">=</span> <span class="fl">18</span>, regions <span class="op">=</span> <span class="va">regions</span>,</span>
 <span>                          corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
-<span>                          file <span class="op">=</span> <span class="st">"Replication_Modules.rds"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotRegionDendro.html">plotRegionDendro</a></span><span class="op">(</span><span class="va">modules_rep</span>, file <span class="op">=</span> <span class="st">"Replication_Region_Dendrograms.pdf"</span><span class="op">)</span></span>
-<span><span class="va">BED_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getModuleBED.html">getModuleBED</a></span><span class="op">(</span><span class="va">modules_rep</span><span class="op">$</span><span class="va">regions</span>,</span>
-<span>                        file <span class="op">=</span> <span class="st">"Replication_Modules.bed"</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="Module%20Preservation/Region_Dendrograms.png" alt="Figure 7. Region Dendrograms"><div class="figcaption">Figure 7. Region Dendrograms</div>
-</div>
+<span>                          file <span class="op">=</span> <span class="st">"Replication_Modules.rds"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="test-module-preservation">Test Module Preservation<a class="anchor" aria-label="anchor" href="#test-module-preservation"></a>
+<h2 id="evaluate-module-preservation">Evaluate Module Preservation<a class="anchor" aria-label="anchor" href="#evaluate-module-preservation"></a>
 </h2>
-<p><code><a href="../reference/getModulePreservation.html">getModulePreservation()</a></code> calculates module preservation
-statistics between the discovery and replication datasets.
-<code><a href="../reference/plotModulePreservation.html">plotModulePreservation()</a></code> plots the summary preservation
-statistics (Zsummary and medianRank) for each module. Modules with
-Zsummary &gt; 10 are considered strongly preserved, between 2 and 10
-moderately preserved, and below 2 not preserved.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">modules_disc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"Discovery_Modules.rds"</span><span class="op">)</span></span>
-<span><span class="va">preservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getModulePreservation.html">getModulePreservation</a></span><span class="op">(</span><span class="va">methAdj</span>, modules <span class="op">=</span> <span class="va">modules_disc</span>,</span>
-<span>                                      methAdj_ref <span class="op">=</span> <span class="va">methAdj_rep</span>,</span>
-<span>                                      modules_ref <span class="op">=</span> <span class="va">modules_rep</span>,</span>
-<span>                                      file <span class="op">=</span> <span class="st">"Module_Preservation.rds"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotModulePreservation.html">plotModulePreservation</a></span><span class="op">(</span><span class="va">preservation</span>,</span>
-<span>                       file <span class="op">=</span> <span class="st">"Module_Preservation_Plots.pdf"</span><span class="op">)</span></span></code></pre></div>
+<p>After module identification and functional association has been
+completed within a dataset, an important next step is the analysis of
+module quality and preservation in an independent replication dataset.
+One approach is that taken by <a href="https://doi.org/10.1371/journal.pcbi.1001057" class="external-link">Langfelder et
+al.</a>, where multiple statistics are calculated to assess different
+types of preservation based on overlapping module assignments and
+network connectivity features. Observed statistics are then compared
+with an empirical null distribution, generated by permuting module
+assignments 100 times, in order to calculate Z-scores and P-values. In
+simulation studies by Langfelder et al., Z-scores &gt; 2 were estimated
+as weak-to-moderate evidence for preservation, while Z-scores &gt; 10
+were estimated as strong evidence.</p>
+<p>To test module preservation, we load the regions with module
+assignments and methylation data for the original dataset and input them
+into <code><a href="../reference/getModulePreservation.html">getModulePreservation()</a></code> along with the new regions and
+associated methylation data. This calculates several preservation
+statistics for each module, along with Z-scores and p-values comparing
+them to the empirical null distribution. After waiting for the
+permutations to complete, we run <code><a href="../reference/plotModulePreservation.html">plotModulePreservation()</a></code>
+to visualize the preservation analysis. This function plots the Z-scores
+by module size, due to the correlation of some of the statistics with
+the number of regions in the module.</p>
+<p>As given by the summary.qual Z-score, all modules were scored as
+having strong evidence for good quality, except for the Ivory module,
+which had weak/moderate evidence. Using the cross-tabulation derived
+accuracy Z-score, 40/53 modules had at least some evidence for
+preservation. In contrast, relatively few modules had evidence for
+preservation across these two datasets based on the network-derived
+summary.pres Z-score. Preserved modules with this statistic included the
+Light-Cyan, Blue and Floral-White modules. This example demonstrates the
+value of multiple measurements of module quality and preservation in
+identifying robust and reproducible comethylation modules.</p>
+<pre><code><span><span class="va">modules_disc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"Discovery_Modules.rds"</span><span class="op">)</span></span>
+<span><span class="va">regions_disc</span> <span class="op">&lt;-</span> <span class="va">modules_disc</span><span class="op">$</span><span class="va">regions</span></span>
+<span><span class="va">methAdj_disc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"Discovery_Adjusted_Region_Methylation.rds"</span><span class="op">)</span></span>
+<span><span class="va">regions_rep</span> <span class="op">&lt;-</span> <span class="va">modules_rep</span><span class="op">$</span><span class="va">regions</span></span>
+<span><span class="va">preservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getModulePreservation.html">getModulePreservation</a></span><span class="op">(</span><span class="va">methAdj_disc</span>, regions_disc <span class="op">=</span> <span class="va">regions_disc</span>, meth_rep <span class="op">=</span> <span class="va">methAdj_rep</span>, regions_rep <span class="op">=</span> <span class="va">regions_rep</span>, corType <span class="op">=</span> <span class="st">"pearson"</span>, file <span class="op">=</span> <span class="st">"Module_Preservation_Stats.txt"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotModulePreservation.html">plotModulePreservation</a></span><span class="op">(</span><span class="va">preservation</span>, file <span class="op">=</span> <span class="st">"Module_Preservation_Plots.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="Module%20Preservation/Module_Preservation_Plots.png" alt="Figure 8. Module Preservation Plots"><div class="figcaption">Figure 8. Module Preservation Plots</div>
+<img src="Module%20Preservation/Module_Preservation_Statistics_Plot.png" alt="Figure 7. Module Preservation Statistic Plots"><div class="figcaption">Figure 7. Module Preservation Statistic
+Plots</div>
 </div>
 </div>
 <div class="section level2">
