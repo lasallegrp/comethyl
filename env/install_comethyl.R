@@ -31,26 +31,6 @@ if (!requireNamespace("remotes", quietly = TRUE))
 BiocManager::install(version = "3.20", ask = FALSE)
 options(repos = BiocManager::repositories())
 
-# ── Helper: install from tarball ─────────────────────────────────────────────
-install_tarball <- function(pkg, version, repo, lib) {
-  if (requireNamespace(pkg, quietly = TRUE)) {
-    message("Already installed: ", pkg); return(invisible(NULL))
-  }
-  message("Installing from tarball: ", pkg)
-  url <- paste0(repo, pkg, "_", version, ".tar.gz")
-  tgz <- tempfile(pattern = paste0(pkg, "_"), fileext = ".tar.gz")
-  tryCatch({
-    download.file(url, tgz, quiet = TRUE)
-    install.packages(tgz, repos = NULL, type = "source", lib = lib)
-    if (!requireNamespace(pkg, quietly = TRUE))
-      message("WARNING: ", pkg, " may not have installed correctly")
-  }, error = function(e) {
-    message("FAILED: ", pkg, " - ", e$message)
-  })
-}
-
-bioc_base <- "https://bioconductor.org/packages/3.20/bioc/src/contrib/"
-bioc_ann  <- "https://bioconductor.org/packages/3.20/data/annotation/src/contrib/"
 
 # ── Step 1: rtracklayer ───────────────────────────────────────────────────────
 # gcc 15 rejects ucsc/common.c because a parameter is literally named 'free',
@@ -192,13 +172,23 @@ install_gdtools_patched <- function(lib, pixi_prefix) {
   untar(tgz, exdir = src)
 
   # Patch: conda-forge puts cairo-ft.h under cairo/ subdir
-  for (f in list.files(file.path(src, "gdtools", "src"),
-                        pattern = "[.][ch]$", full.names = TRUE, recursive = TRUE)) {
-    lines <- readLines(f)
+  # Patch all C/C++/header files, including src/tests/sysdeps.c.
+  gdtools_root <- file.path(src, "gdtools")
+
+  files_to_patch <- list.files(
+    gdtools_root,
+    pattern = "\\.(c|cc|cpp|h|hpp)$",
+    full.names = TRUE,
+    recursive = TRUE
+  )
+
+  for (f in files_to_patch) {
+    lines <- readLines(f, warn = FALSE)
+
     if (any(grepl("<cairo-ft.h>", lines, fixed = TRUE))) {
       lines <- gsub("<cairo-ft.h>", "<cairo/cairo-ft.h>", lines, fixed = TRUE)
       writeLines(lines, f)
-      message("  Patched: ", basename(f))
+      message("  Patched cairo-ft include in: ", f)
     }
   }
 
@@ -211,7 +201,12 @@ install_gdtools_patched <- function(lib, pixi_prefix) {
   libs <- paste0("-L", pixi_prefix, "/lib -lcairo -lfreetype -lfontconfig")
 
   Sys.setenv(
-    PKG_CONFIG_PATH = paste0(pixi_prefix, "/lib/pkgconfig"),
+    PKG_CONFIG_PATH = paste(
+      file.path(pixi_prefix, "lib", "pkgconfig"),
+      file.path(pixi_prefix, "share", "pkgconfig"),
+      Sys.getenv("PKG_CONFIG_PATH"),
+      sep = ":"
+    ),
     PKG_CFLAGS = inc,
     PKG_LIBS   = libs
   )
@@ -229,16 +224,19 @@ install_gdtools_patched <- function(lib, pixi_prefix) {
 
 install_gdtools_patched(lib, pixi_prefix)
 
+if (!requireNamespace("gdtools", quietly = TRUE)) {
+  stop("Patched gdtools failed to install. Cannot continue to ggiraph.", call. = FALSE)
+}
+
 # ggiraph depends on gdtools
 if (!requireNamespace("ggiraph", quietly = TRUE)) {
   message("Installing ggiraph...")
-  install.packages("ggiraph", lib = lib)
+  install.packages("ggiraph", lib = lib, dependencies = FALSE)
 }
 
 if (!requireNamespace("ggiraph", quietly = TRUE)) {
   stop("Failed to install ggiraph.", call. = FALSE)
 }
-
 
 # ggtree 3.14.0 (Bioc 3.20) calls check_linewidth() which was removed in
 # ggplot2 4.0. Install GitHub HEAD (4.x) which is ggplot2-4.x compatible.
