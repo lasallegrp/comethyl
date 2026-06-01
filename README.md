@@ -44,7 +44,21 @@ If you already have R ≥ 4.3 and Bioconductor set up:
 
 ```r
 install.packages(c("BiocManager", "remotes"))
-BiocManager::install("lasallegrp/comethyl")
+
+# Install Bioconductor dependencies first if needed
+BiocManager::install(c(
+  "bsseq",
+  "GenomicRanges",
+  "IRanges",
+  "annotatr",
+  "WGCNA",
+  "sva",
+  "rGREAT"
+))
+
+# Install comethyl from GitHub
+remotes::install_github("lasallegrp/comethyl", dependencies = TRUE)
+
 library(comethyl)
 ```
 
