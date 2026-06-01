@@ -9,7 +9,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64"]
 
 [tasks]
 install-comethyl = "Rscript env/install_comethyl.R"
-test-r           = "Rscript -e 'sessionInfo()'"
+test-r = "Rscript -e 'library(comethyl); library(rtracklayer); library(ReactomePA); sessionInfo()'"
 
 # ============================================================================
 # Shared dependencies (all platforms)

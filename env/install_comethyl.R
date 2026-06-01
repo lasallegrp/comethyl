@@ -57,6 +57,41 @@ bioc_ann  <- "https://bioconductor.org/packages/3.20/data/annotation/src/contrib
 # shadowing stdlib's free(). Fix: rename to 'freeFn' with explicit void* arg type.
 # Also fix common.h declaration which uses old-style void (*free)() — no arg types —
 # which gcc 15 now strictly treats as zero-argument.
+install_bioc_or_stop <- function(pkgs, lib) {
+  for (pkg in pkgs) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      message("Installing Bioconductor: ", pkg)
+      BiocManager::install(pkg, lib = lib, ask = FALSE, update = FALSE)
+    } else {
+      message("Already installed: ", pkg)
+    }
+
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop("Failed to install required package: ", pkg, call. = FALSE)
+    }
+  }
+}
+
+pre_rtracklayer_pkgs <- c(
+  "BiocGenerics",
+  "S4Vectors",
+  "IRanges",
+  "XVector",
+  "GenomeInfoDb",
+  "GenomeInfoDbData",
+  "Biostrings",
+  "GenomicRanges",
+  "XML",
+  "curl",
+  "httr",
+  "Rsamtools",
+  "BiocIO",
+  "restfulr",
+  "GenomicAlignments"
+)
+
+install_bioc_or_stop(pre_rtracklayer_pkgs, lib)
+
 
 patch_and_install_rtracklayer <- function(lib) {
   if (requireNamespace("rtracklayer", quietly = TRUE)) {
@@ -117,20 +152,27 @@ patch_and_install_rtracklayer <- function(lib) {
 
 patch_and_install_rtracklayer(lib)
 
+if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+  stop("rtracklayer failed to install even after patching.", call. = FALSE)
+}
+
+
 # ── Step 2: rtracklayer dependents — direct tarballs, correct order ───────────
 # annotatr must come before dmrseq (dmrseq Imports annotatr)
-install_tarball("BSgenome",        "1.74.0",  bioc_base, lib)
-install_tarball("GenomicFeatures", "1.58.0",  bioc_base, lib)
-install_tarball("GenomicAlignments","1.42.0", bioc_base, lib)
-install_tarball("regioneR",        "1.38.0",  bioc_base, lib)
-install_tarball("bumphunter",      "1.48.0",  bioc_base, lib)
-install_tarball("TxDb.Hsapiens.UCSC.hg19.knownGene", "3.2.2",  bioc_ann, lib)
-install_tarball("TxDb.Hsapiens.UCSC.hg38.knownGene", "3.20.0", bioc_ann, lib)
-install_tarball("bsseq",           "1.42.0",  bioc_base, lib)
-install_tarball("annotatr",        "1.32.0",  bioc_base, lib)  # before dmrseq
-install_tarball("dmrseq",          "1.26.0",  bioc_base, lib)
-install_tarball("rGREAT",          "2.8.0",   bioc_base, lib)
+post_rtracklayer_pkgs <- c(
+  "BSgenome",
+  "GenomicFeatures",
+  "regioneR",
+  "bumphunter",
+  "TxDb.Hsapiens.UCSC.hg19.knownGene",
+  "TxDb.Hsapiens.UCSC.hg38.knownGene",
+  "bsseq",
+  "annotatr",
+  "dmrseq",
+  "rGREAT"
+)
 
+install_bioc_or_stop(post_rtracklayer_pkgs, lib)
 # ── Step 3: gdtools (patched) → ggiraph → ggtree ─────────────────────────────
 # gdtools 0.5.1 configure test includes <cairo-ft.h> but conda-forge puts it
 # at include/cairo/cairo-ft.h and ft2build.h at include/freetype2/ft2build.h.
@@ -184,60 +226,71 @@ install_gdtools_patched <- function(lib, pixi_prefix) {
     message("WARNING: gdtools may not have installed correctly")
 }
 
+
 install_gdtools_patched(lib, pixi_prefix)
 
 # ggiraph depends on gdtools
 if (!requireNamespace("ggiraph", quietly = TRUE)) {
   message("Installing ggiraph...")
   install.packages("ggiraph", lib = lib)
-} else {
-  message("Already installed: ggiraph")
 }
+
+if (!requireNamespace("ggiraph", quietly = TRUE)) {
+  stop("Failed to install ggiraph.", call. = FALSE)
+}
+
 
 # ggtree 3.14.0 (Bioc 3.20) calls check_linewidth() which was removed in
 # ggplot2 4.0. Install GitHub HEAD (4.x) which is ggplot2-4.x compatible.
 # ggtree is required by enrichplot → clusterProfiler → ReactomePA → comethyl.
 if (!requireNamespace("ggtree", quietly = TRUE)) {
-  message("Installing ggtree from GitHub (ggplot2 4.x compatible)...")
-  remotes::install_github("YuLab-SMU/ggtree",
-                          lib = lib, upgrade = "never", dependencies = FALSE)
-} else {
-  message("Already installed: ggtree")
+  message("Installing ggtree from GitHub for ggplot2 4.x compatibility...")
+  remotes::install_github(
+    "YuLab-SMU/ggtree",
+    lib = lib,
+    upgrade = "never",
+    dependencies = TRUE
+  )
 }
+
+if (!requireNamespace("ggtree", quietly = TRUE)) {
+  stop("Failed to install ggtree.", call. = FALSE)
+}
+
+
 
 # ── Step 4: remaining Bioconductor via BiocManager ───────────────────────────
-bioc_pkgs <- c(
-  "BiocGenerics", "S4Vectors", "IRanges", "GenomeInfoDb",
-  "GenomeInfoDbData", "GenomicRanges", "SummarizedExperiment",
-  "DelayedArray", "MatrixGenerics", "DelayedMatrixStats",
-  "Biobase", "BiocParallel",
-  "AnnotationDbi", "biomaRt",
-  "org.Hs.eg.db", "GO.db", "HDO.db",
-  "sva", "preprocessCore", "impute",
-  "WGCNA", "GOSemSim", "DOSE", "fgsea",
-  "enrichplot", "clusterProfiler",
-  "ReactomePA", "reactome.db"
+core_bioc_pkgs <- c(
+  "SummarizedExperiment",
+  "DelayedArray",
+  "MatrixGenerics",
+  "DelayedMatrixStats",
+  "Biobase",
+  "BiocParallel",
+  "AnnotationDbi",
+  "biomaRt",
+  "org.Hs.eg.db",
+  "GO.db",
+  "HDO.db",
+  "sva",
+  "preprocessCore",
+  "impute",
+  "WGCNA"
 )
 
-for (pkg in bioc_pkgs) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Installing Bioconductor: ", pkg)
-    tryCatch(
-      BiocManager::install(pkg, lib = lib, ask = FALSE,
-                           update = FALSE, force = FALSE),
-      error = function(e) message("FAILED: ", pkg, " - ", e$message)
-    )
-    # BiocManager sometimes reinstalls rtracklayer unpatched as a side effect
-    if (!requireNamespace("rtracklayer", quietly = TRUE)) {
-      message("rtracklayer overwritten after ", pkg, " — repatching...")
-      # Force reinstall by temporarily removing it
-      try(remove.packages("rtracklayer", lib = lib), silent = TRUE)
-      patch_and_install_rtracklayer(lib)
-    }
-  } else {
-    message("Already installed: ", pkg)
-  }
-}
+install_bioc_or_stop(core_bioc_pkgs, lib)
+
+enrichment_pkgs <- c(
+  "GOSemSim",
+  "DOSE",
+  "fgsea",
+  "reactome.db",
+  "enrichplot",
+  "clusterProfiler",
+  "ReactomePA"
+)
+
+install_bioc_or_stop(enrichment_pkgs, lib)
 
 # ── Step 5: comethyl ──────────────────────────────────────────────────────────
 message("Installing comethyl from lasallegrp/comethyl ...")
@@ -245,4 +298,32 @@ remotes::install_github("lasallegrp/comethyl",
                         lib = lib, upgrade = "never",
                         dependencies = FALSE)
 
-message("\nDone. Run `pixi run test-r` to verify the session.")
+required_full_pipeline <- c(
+  "bsseq",
+  "annotatr",
+  "dmrseq",
+  "rGREAT",
+  "clusterProfiler",
+  "enrichplot",
+  "ReactomePA",
+  "reactome.db",
+  "WGCNA",
+  "sva",
+  "rtracklayer",
+  "comethyl"
+)
+
+missing <- required_full_pipeline[
+  !vapply(required_full_pipeline, requireNamespace, logical(1), quietly = TRUE)
+]
+
+if (length(missing) > 0) {
+  stop(
+    "Full comethyl installation failed. Missing packages: ",
+    paste(missing, collapse = ", "),
+    call. = FALSE
+  )
+}
+
+message("\nFull comethyl installation completed successfully.")
+message("Run `pixi run test-r` to verify the session.")
