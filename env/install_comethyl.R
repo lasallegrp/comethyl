@@ -158,6 +158,22 @@ install_bioc_or_stop(post_rtracklayer_pkgs, lib)
 # at include/cairo/cairo-ft.h and ft2build.h at include/freetype2/ft2build.h.
 # Patch the configure test and pass explicit include paths.
 
+#install gdtools dependency
+install_cran_or_stop <- function(pkgs, lib) {
+  for (pkg in pkgs) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      message("Installing CRAN: ", pkg)
+      install.packages(pkg, lib = lib, dependencies = TRUE)
+    } else {
+      message("Already installed: ", pkg)
+    }
+
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop("Failed to install required CRAN package: ", pkg, call. = FALSE)
+    }
+  }
+}
+
 install_gdtools_patched <- function(lib, pixi_prefix) {
   if (requireNamespace("gdtools", quietly = TRUE)) {
     message("Already installed: gdtools"); return(invisible(NULL))
@@ -217,10 +233,14 @@ install_gdtools_patched <- function(lib, pixi_prefix) {
                      "INCLUDE_DIR=", pixi_prefix, "/include",
                      " LIB_DIR=", pixi_prefix, "/lib"))
 
-  if (!requireNamespace("gdtools", quietly = TRUE))
-    message("WARNING: gdtools may not have installed correctly")
-}
+  if (!requireNamespace("gdtools", quietly = TRUE)) {
+      stop("Failed to install patched gdtools.", call. = FALSE)
+    }
 
+  message("gdtools installed successfully")
+}
+gdtools_cran_prereqs <- c("fontquiver")
+install_cran_or_stop(gdtools_cran_prereqs, lib)
 
 install_gdtools_patched(lib, pixi_prefix)
 
