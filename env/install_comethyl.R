@@ -13,6 +13,7 @@
 # -----------------------------------------------------------------------
 
 options(repos = c(CRAN = "https://cloud.r-project.org"))
+options(timeout = max(3600, getOption("timeout")))
 
 lib <- .libPaths()[1]
 message("Installing into: ", lib)
@@ -37,16 +38,40 @@ options(repos = BiocManager::repositories())
 # shadowing stdlib's free(). Fix: rename to 'freeFn' with explicit void* arg type.
 # Also fix common.h declaration which uses old-style void (*free)() — no arg types —
 # which gcc 15 now strictly treats as zero-argument.
-install_bioc_or_stop <- function(pkgs, lib) {
+
+install_bioc_or_stop <- function(pkgs, lib, retries = 3) {
   for (pkg in pkgs) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      message("Installing Bioconductor: ", pkg)
-      BiocManager::install(pkg, lib = lib, ask = FALSE, update = FALSE)
-    } else {
+    if (requireNamespace(pkg, quietly = TRUE)) {
       message("Already installed: ", pkg)
+      next
     }
 
-    if (!requireNamespace(pkg, quietly = TRUE)) {
+    success <- FALSE
+
+    for (attempt in seq_len(retries)) {
+      message("Installing Bioconductor: ", pkg, " [attempt ", attempt, "/", retries, "]")
+
+      tryCatch(
+        {
+          BiocManager::install(pkg, lib = lib, ask = FALSE, update = FALSE)
+        },
+        error = function(e) {
+          message("Attempt ", attempt, " failed for ", pkg, ": ", e$message)
+        }
+      )
+
+      if (requireNamespace(pkg, quietly = TRUE)) {
+        success <- TRUE
+        break
+      }
+
+      if (attempt < retries) {
+        message("Retrying ", pkg, " after 30 seconds...")
+        Sys.sleep(30)
+      }
+    }
+
+    if (!success) {
       stop("Failed to install required package: ", pkg, call. = FALSE)
     }
   }
