@@ -77,11 +77,18 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Install pixi (macOS / Linux / WSL2)</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://pixi.sh/install.sh <span class="kw">|</span> <span class="fu">bash</span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># Clone the repo and install the environment</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/lasallegrp/comethyl.git</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="bu">cd</span> comethyl</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="ex">pixi</span> install</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="ex">pixi</span> run install-comethyl</span></code></pre></div>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#set the pixi home and cache directory e.g for Mac below</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="bu">export</span> <span class="va">PIXI_HOME</span><span class="op">=</span>/Users/<span class="va">$USER</span>/.pixi</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="bu">export</span> <span class="va">PIXI_CACHE_DIR</span><span class="op">=</span>/Users/<span class="va">$USER</span>/.pixi</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="bu">unset</span> <span class="va">RATTLER_CACHE_DIR</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="bu">unset</span> <span class="va">XDG_CACHE_HOME</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co"># Clone the repo and install the environment</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/lasallegrp/comethyl.git</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="bu">cd</span> comethyl</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="ex">pixi</span> install</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="ex">pixi</span> run install-comethyl</span></code></pre></div>
 <p>See the <a href="https://lasallegrp.github.io/comethyl/articles/comethyl.html">Get Started vignette</a> for full installation instructions including Windows (WSL2) and Apple Silicon support.</p>
 </div>
 <div class="section level3">
@@ -172,7 +179,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
