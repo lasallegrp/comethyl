@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Consensus Modules • comethyl</title>
+<title>Consensus Module Analysis • comethyl</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Consensus Modules">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Consensus Module Analysis">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -54,8 +54,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Consensus Modules</h1>
-                        <h4 data-toc-skip class="author">George Eusebio
+      <h1>Consensus Module Analysis</h1>
+                        <h4 data-toc-skip class="author">George
 Kuodza</h4>
             
             <h4 data-toc-skip class="date">2026-08-23</h4>
@@ -71,29 +71,26 @@ Kuodza</h4>
 </h2>
 <p>In this vignette we use Comethyl to construct a
 <strong>consensus</strong> weighted region comethylation network — a
-network built simultaneously across two or more datasets (e.g., multiple
-timepoints or two biological groups) that share the same genomic region
-definitions. Because the modules are identified jointly, any module that
-emerges represents comethylation structure that is reproducible across
-datasets rather than idiosyncratic to one.</p>
-<p>A typical use case is a longitudinal study with samples collected at
-multiple timepoints (Baseline, 36–38 weeks, Postpartum), or a
-sex-stratified study where female and male samples are analyzed
-separately but using a common region set so that modules can be compared
-directly.</p>
-<p>The dataset used here consists of three maternal blood WGBS
-timepoints from the Growing Up in Singapore Towards Healthy Outcomes
-(GUSTO) cohort provided as test data in <a href="https://github.com/lasallegrp/bgw_wgbs_comethyl/tree/main/tests/data/processed/cytosine_reports" class="external-link"><code>lasallegrp/bgw_wgbs_comethyl</code></a>.
-The three timepoints — <strong>Baseline</strong>, <strong>36–38
-weeks</strong>, and <strong>Postpartum</strong> — each have their own
-set of CpG_report files and sample metadata.</p>
+network built simultaneously across two biological groups (here,
+<strong>females</strong> and <strong>males</strong>) that share the same
+genomic region definitions. Because modules are identified jointly, any
+module that emerges represents comethylation structure that is
+reproducible across both groups rather than idiosyncratic to one.</p>
+<p>The dataset used here is from the <strong>Babies GROWELL</strong>
+study (<code>bgw_wgbs_comethyl</code>), which investigates how prenatal
+family and community-level exposures influence early childhood DNA
+methylation, particularly in regions related to energy regulation and
+fat deposition. Children (ages 1–4) from mothers with pre-pregnancy BMI
+25–40 were profiled by whole-genome bisulfite sequencing (WGBS). Females
+and males are analyzed as separate datasets using a shared region set so
+that modules can be compared directly between sexes.</p>
 <blockquote>
 <p><strong>Relationship to other vignettes.</strong> The CpG Cluster
 Analysis and Gene Body Analysis vignettes document the single-dataset
 workflow. This vignette covers the multi-dataset extension. Many of the
-underlying comethyl functions are the same; the key difference is the
-reference region strategy and the use of
-<code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">blockwiseConsensusModules()</a></code> from WGCNA.</p>
+underlying comethyl functions are the same; the key differences are the
+reference region strategy, the joint SD filter (Script 05b), and the use
+of <code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">blockwiseConsensusModules()</a></code> from WGCNA.</p>
 </blockquote>
 <hr>
 </div>
@@ -121,6 +118,19 @@ Started vignette</a> for full installation instructions.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://lasallegrp.github.io/comethyl/">comethyl</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">WGCNA</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ycphs.github.io/openxlsx/index.html" class="external-link">openxlsx</a></span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Note on file paths.</strong> All file paths in this vignette
+are written relative to your <strong>project root</strong> — the
+top-level directory of your analysis (e.g.,
+<code>/path/to/my_project/</code>). Before running any code, set your
+working directory to the project root:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"/path/to/my_project"</span><span class="op">)</span>   <span class="co"># replace with your actual project root</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>                         <span class="co"># confirm before proceeding</span></span></code></pre></div>
+<p>The output directory tree (<code>comethyl_output/consensus/</code>)
+will be created automatically by each script. You do not need to create
+it manually.</p>
+</blockquote>
 </div>
 <div class="section level2">
 <h2 id="set-global-options">Set Global Options<a class="anchor" aria-label="anchor" href="#set-global-options"></a>
@@ -129,7 +139,7 @@ Started vignette</a> for full installation instructions.</p>
 when working with large region sets (&gt; 150,000 regions). For smaller
 sets or interactive exploration you can enable threads with
 <code><a href="https://rdrr.io/pkg/WGCNA/man/allowWGCNAThreads.html" class="external-link">WGCNA::enableWGCNAThreads()</a></code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>R_THREADS <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu">WGCNA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/WGCNA/man/allowWGCNAThreads.html" class="external-link">disableWGCNAThreads</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -152,26 +162,26 @@ CpG universe and their region methylation is calculated over the
 reference regions.</li>
 <li>After all datasets have region methylation matrices, a
 <strong>shared region filter</strong> (Script 05b) keeps only regions
-that are present and sufficiently variable across every dataset.</li>
+that are present and sufficiently variable across both datasets.</li>
 <li>PCs are derived and methylation is adjusted independently for each
-dataset (Scripts 06–07).</li>
+dataset (Scripts 06–07), with two adjustment strategies compared.</li>
 <li>A <strong>single consensus soft-power</strong> is chosen that
 satisfies scale-free topology criteria in every dataset simultaneously
 (Script 08).</li>
+<li>A <strong>soft-power benchmark</strong> (Script 08b) uses subsampled
+regions to efficiently compare power choices across adjustment versions,
+with Script 08c summarising results across all filter candidates.</li>
 <li>
 <code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">blockwiseConsensusModules()</a></code> identifies modules that are
-consistent across datasets (Script 09). The resulting module assignments
-are shared — a region belongs to the same module regardless of which
-dataset is examined.</li>
-<li>Downstream analyses (membership, ME-trait correlations, annotation,
-enrichment) use these shared assignments.</li>
+consistent across both sexes (Script 09).</li>
+<li>Downstream analyses (diagnostics, membership, ME-trait correlations,
+annotation, enrichment) use the shared module assignments.</li>
 </ol>
 <div class="section level3">
 <h3 id="choosing-a-reference-dataset">Choosing a Reference Dataset<a class="anchor" aria-label="anchor" href="#choosing-a-reference-dataset"></a>
 </h3>
 <p>The reference dataset determines which CpGs are retained and which
-genomic regions are defined. This choice should be guided by your
-research question:</p>
+genomic regions are defined. For sex-stratified analyses:</p>
 <ul>
 <li>If you have a <strong>baseline or pre-treatment timepoint</strong>,
 this is usually the natural reference because it defines the methylation
@@ -182,231 +192,337 @@ the group most central to your hypothesis as the reference.</li>
 <li>If no single dataset is clearly primary, choose the one with the
 <strong>highest sequencing depth or most samples</strong>, as it will
 produce the most stable region definitions.</li>
+<li>In the BGW analysis, <strong>females</strong> are used as the
+reference dataset.</li>
 </ul>
 <blockquote>
 <p><strong>Practical note.</strong> The reference only affects which
 CpGs and regions are defined in Scripts 01–02. Once regions are defined,
 all datasets are treated symmetrically in Script 05b onward.</p>
 </blockquote>
+</div>
+<div class="section level3">
+<h3 id="two-adjustment-strategies">Two Adjustment Strategies<a class="anchor" aria-label="anchor" href="#two-adjustment-strategies"></a>
+</h3>
+<p>Script 07 supports two adjustment modes that are compared throughout
+the downstream analysis:</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="37%">
+<col width="37%">
+</colgroup>
+<thead><tr class="header">
+<th>Version</th>
+<th>Description</th>
+<th>When to use</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>v1_all_pcs</code></td>
+<td>Regress out all top PCs</td>
+<td>Simple baseline; conservative</td>
+</tr>
+<tr class="even">
+<td><code>v2_exclude_protected_pcs</code></td>
+<td>Exclude PCs correlated with protected biological traits (e.g. sex,
+diagnosis)</td>
+<td>When you want to preserve signal from key biological variables</td>
+</tr>
+</tbody>
+</table>
+<p>Both versions are run in parallel and compared from Script 08 onward.
+Protected and technical traits are defined in config files
+(<code>protected_traits.txt</code>,
+<code>technical_traits.txt</code>).</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="import-cpg-reports-script-00">1. Import CpG Reports (Script 00)<a class="anchor" aria-label="anchor" href="#import-cpg-reports-script-00"></a>
+<h2 id="import-cpg-reports-script-00">1. Import CpG Reports — Script 00<a class="anchor" aria-label="anchor" href="#import-cpg-reports-script-00"></a>
 </h2>
-<p><strong>Run separately for each dataset/timepoint.</strong></p>
+<p><strong>Run separately for each dataset (females and
+males).</strong></p>
 <p><code><a href="../reference/getCpGs.html">getCpGs()</a></code> reads Bismark CpG_report files into a single
-BSseq object. This step is identical to the single-dataset workflow but
-is run once per dataset. The script also computes and plots CpG totals
-at different coverage and per-sample cutoffs so you can assess data
-quality before choosing a filter.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Interactive equivalent of Script 00 — run for each dataset separately</span></span>
+BSseq object and computes CpG totals at different coverage and
+per-sample cutoffs to guide filter choice. Run once per dataset — the
+cytosine reports for both sexes can live in the same directory since
+samples are matched via the metadata file.</p>
+<div class="section level3">
+<h3 id="metadata-file-format">Metadata File Format<a class="anchor" aria-label="anchor" href="#metadata-file-format"></a>
+</h3>
+<p>The sample metadata file is an Excel spreadsheet read with
+<code>openxlsx::read.xlsx(..., rowNames = TRUE)</code>. The first column
+must contain sample IDs that exactly match the Bismark CpG_report
+filenames (without the <code>.CpG_report.txt.gz</code> suffix). The
+first cell of row 1 (column A) should be <strong>left blank</strong> —
+this tells <code>read.xlsx</code> to treat that column as row names
+rather than a data column.</p>
+<table class="table">
+<thead><tr class="header">
+<th></th>
+<th>Sex</th>
+<th>Diagnosis</th>
+<th>BMI</th>
+<th>Age</th>
+<th>Batch</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Sample_01</td>
+<td>0</td>
+<td>1</td>
+<td>28.4</td>
+<td>32</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Sample_02</td>
+<td>1</td>
+<td>0</td>
+<td>31.2</td>
+<td>29</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>Sample_03</td>
+<td>0</td>
+<td>1</td>
+<td>26.7</td>
+<td>35</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>All trait columns must be <strong>numeric</strong>. Categorical
+variables should be dummy-coded (e.g., Sex: F = 0, M = 1; Diagnosis: TD
+= 0, ASD = 1). Character values such as <code>"Female"</code>,
+<code>"&lt;LOD"</code>, or blank cells will cause those columns to be
+silently dropped during downstream numeric filtering.</p>
+<p><strong>Common errors and fixes:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Error: duplicate row names</span></span>
+<span><span class="co"># Cause: two samples share the same ID in column A</span></span>
+<span><span class="co"># Fix: ensure every sample has a unique identifier</span></span>
 <span></span>
-<span><span class="co"># ── Baseline (reference) ─────────────────────────────────────────────────────</span></span>
-<span><span class="va">colData_base</span> <span class="op">&lt;-</span> <span class="fu">openxlsx</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openxlsx/man/read.xlsx.html" class="external-link">read.xlsx</a></span><span class="op">(</span><span class="st">"sample_info_Baseline.xlsx"</span>, rowNames <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co"># Error: no CpG report files found / sample mismatch</span></span>
+<span><span class="co"># Cause: row names don't match filenames in the cytosine report directory</span></span>
+<span><span class="co"># Check with:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="st">"data/processed/cytosine_reports/"</span>, pattern <span class="op">=</span> <span class="st">"CpG_report"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">colData_females</span><span class="op">)</span>   <span class="co"># these must overlap</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"cytosine_reports/Baseline/"</span><span class="op">)</span></span>
-<span><span class="va">bs_base_unfiltered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGs.html">getCpGs</a></span><span class="op">(</span></span>
-<span>  colData  <span class="op">=</span> <span class="va">colData_base</span>,</span>
-<span>  file     <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/Baseline/Unfiltered_BSseq.rds"</span></span>
+<span><span class="co"># Silent drop of trait columns (e.g. DDT, PCBs, sex)</span></span>
+<span><span class="co"># Cause: column contains "&lt;LOD", "ND", blanks, or mixed types</span></span>
+<span><span class="co"># Fix: coerce to numeric before passing to the pipeline</span></span>
+<span><span class="va">colData_females</span> <span class="op">&lt;-</span> <span class="va">colData_females</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">everything</span><span class="op">(</span><span class="op">)</span>, <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ── Females (reference) ───────────────────────────────────────────────────────</span></span>
+<span><span class="va">colData_females</span> <span class="op">&lt;-</span> <span class="fu">openxlsx</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openxlsx/man/read.xlsx.html" class="external-link">read.xlsx</a></span><span class="op">(</span><span class="st">"data/metadata/merged_qc_females.xlsx"</span>,</span>
+<span>                                        rowNames <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"data/processed/cytosine_reports/"</span><span class="op">)</span></span>
+<span><span class="va">bs_females_unfiltered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGs.html">getCpGs</a></span><span class="op">(</span></span>
+<span>  colData <span class="op">=</span> <span class="va">colData_females</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/females/Unfiltered_BSseq.rds"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"../../"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"../../.."</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">CpGtotals_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGtotals.html">getCpGtotals</a></span><span class="op">(</span></span>
-<span>  <span class="va">bs_base_unfiltered</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/Baseline/CpG_Totals.txt"</span></span>
+<span><span class="va">CpGtotals_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGtotals.html">getCpGtotals</a></span><span class="op">(</span></span>
+<span>  <span class="va">bs_females_unfiltered</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/females/CpG_Totals.txt"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotCpGtotals.html">plotCpGtotals</a></span><span class="op">(</span></span>
-<span>  <span class="va">CpGtotals_base</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/Baseline/CpG_Totals.pdf"</span></span>
+<span><span class="fu"><a href="../reference/plotCpGtotals.html">plotCpGtotals</a></span><span class="op">(</span><span class="va">CpGtotals_females</span>,</span>
+<span>              file <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/females/CpG_Totals.pdf"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ── Males ─────────────────────────────────────────────────────────────────────</span></span>
+<span><span class="va">colData_males</span> <span class="op">&lt;-</span> <span class="fu">openxlsx</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openxlsx/man/read.xlsx.html" class="external-link">read.xlsx</a></span><span class="op">(</span><span class="st">"data/metadata/merged_qc_males.xlsx"</span>,</span>
+<span>                                      rowNames <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"data/processed/cytosine_reports/"</span><span class="op">)</span></span>
+<span><span class="va">bs_males_unfiltered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGs.html">getCpGs</a></span><span class="op">(</span></span>
+<span>  colData <span class="op">=</span> <span class="va">colData_males</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/males/Unfiltered_BSseq.rds"</span></span>
 <span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"../../.."</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># ── 36–38 weeks ──────────────────────────────────────────────────────────────</span></span>
-<span><span class="va">colData_36wk</span> <span class="op">&lt;-</span> <span class="fu">openxlsx</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openxlsx/man/read.xlsx.html" class="external-link">read.xlsx</a></span><span class="op">(</span><span class="st">"sample_info_36-38wk.xlsx"</span>, rowNames <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"cytosine_reports/36-38wk/"</span><span class="op">)</span></span>
-<span><span class="va">bs_36wk_unfiltered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGs.html">getCpGs</a></span><span class="op">(</span></span>
-<span>  colData <span class="op">=</span> <span class="va">colData_36wk</span>,</span>
-<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/36-38wk/Unfiltered_BSseq.rds"</span></span>
+<span><span class="va">CpGtotals_males</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGtotals.html">getCpGtotals</a></span><span class="op">(</span></span>
+<span>  <span class="va">bs_males_unfiltered</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/males/CpG_Totals.txt"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"../../"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Repeat getCpGtotals / plotCpGtotals for 36-38wk ...</span></span>
-<span></span>
-<span><span class="co"># ── Postpartum ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co"># ... same pattern for Postpartum</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/plotCpGtotals.html">plotCpGtotals</a></span><span class="op">(</span><span class="va">CpGtotals_males</span>,</span>
+<span>              file <span class="op">=</span> <span class="st">"comethyl_output/consensus/00_cpg_extraction/males/CpG_Totals.pdf"</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/CpG_Totals_females.png" alt="Figure 1. CpG Totals — Females"><div class="figcaption">Figure 1. CpG Totals — Females</div>
+</div>
+<p><em>Figure 1. CpG totals for the female dataset across a range of
+coverage and per-sample cutoffs. Use this plot as well as
+</em>CpG_Totals.txt* to select a <code>cov</code> and
+<code>perSample</code> combination that retains a reasonable number of
+CpGs without sacrificing too many samples.*</p>
 <hr>
 </div>
+</div>
 <div class="section level2">
-<h2 id="filter-cpgs-and-define-reference-regions-script-01">2. Filter CpGs and Define Reference Regions (Script 01)<a class="anchor" aria-label="anchor" href="#filter-cpgs-and-define-reference-regions-script-01"></a>
+<h2 id="filter-cpgs-and-define-reference-regions-script-01">2. Filter CpGs and Define Reference Regions — Script 01<a class="anchor" aria-label="anchor" href="#filter-cpgs-and-define-reference-regions-script-01"></a>
 </h2>
-<p><strong>Run on the reference dataset only.</strong></p>
-<p>We filter CpGs in the reference dataset and use
-<code><a href="../reference/getRegions.html">getRegions()</a></code> to define genomic regions. These regions are
-the canonical definitions reused by all other datasets.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># ── Filter reference CpGs ────────────────────────────────────────────────────</span></span>
-<span><span class="va">bs_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterCpGs.html">filterCpGs</a></span><span class="op">(</span></span>
-<span>  bs         <span class="op">=</span> <span class="va">bs_base_unfiltered</span>,</span>
-<span>  cov        <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  perSample  <span class="op">=</span> <span class="fl">0.75</span>,</span>
-<span>  file       <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Filtered_BSseq.rds"</span></span>
+<p><strong>Run on the reference dataset (females) only.</strong></p>
+<p><code><a href="../reference/filterCpGs.html">filterCpGs()</a></code> retains CpGs meeting minimum coverage and
+per-sample requirements. <code><a href="../reference/getRegions.html">getRegions()</a></code> then clusters
+retained CpGs into genomic regions. These regions are the canonical
+definitions reused by all other datasets. Here we keep CpGs with at
+least 3 reads in at least 75% of samples (<code>cov = 3</code>,
+<code>perSample = 0.75</code>).</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bs_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterCpGs.html">filterCpGs</a></span><span class="op">(</span></span>
+<span>  bs        <span class="op">=</span> <span class="va">bs_females_unfiltered</span>,</span>
+<span>  cov       <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  perSample <span class="op">=</span> <span class="fl">0.75</span>,</span>
+<span>  file      <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/Filtered_BSseq.rds"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># ── Define regions ────────────────────────────────────────────────────────────</span></span>
 <span><span class="va">regions_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRegions.html">getRegions</a></span><span class="op">(</span></span>
-<span>  bs   <span class="op">=</span> <span class="va">bs_base</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Regions.txt"</span></span>
+<span>  bs   <span class="op">=</span> <span class="va">bs_females</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/Regions.txt"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/plotRegionStats.html">plotRegionStats</a></span><span class="op">(</span><span class="va">regions_raw</span>, maxQuantile <span class="op">=</span> <span class="fl">0.99</span>,</span>
-<span>                file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Region_Plots.pdf"</span><span class="op">)</span></span>
+<span>                file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/Region_Plots.pdf"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotSDstats.html">plotSDstats</a></span><span class="op">(</span><span class="va">regions_raw</span>, maxQuantile <span class="op">=</span> <span class="fl">0.99</span>,</span>
-<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/SD_Plots.pdf"</span><span class="op">)</span></span>
+<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/SD_Plots.pdf"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">regionTotals</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRegionTotals.html">getRegionTotals</a></span><span class="op">(</span></span>
 <span>  <span class="va">regions_raw</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Region_Totals.txt"</span></span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/Region_Totals.txt"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotRegionTotals.html">plotRegionTotals</a></span><span class="op">(</span></span>
-<span>  <span class="va">regionTotals</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Region_Totals.pdf"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/plotRegionTotals.html">plotRegionTotals</a></span><span class="op">(</span><span class="va">regionTotals</span>,</span>
+<span>                 file <span class="op">=</span> <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/Region_Totals.pdf"</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Unfiltered_SD_Plots_females.png" alt="Figure 2. Unfiltered Region SD Plots — Females"><div class="figcaption">Figure 2. Unfiltered Region SD Plots —
+Females</div>
+</div>
+<p><em>Figure 2. Methylation standard deviation versus region statistics
+for unfiltered regions in the female dataset. Regions with low coverage
+tend to have high SD driven by technical noise rather than
+biology.</em></p>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Region_Totals_females.png" alt="Figure 3. Region Totals — Females"><div class="figcaption">Figure 3. Region Totals — Females</div>
+</div>
+<p><em>Figure 3. Number of regions remaining after filtering at
+different <code>covMin</code> and <code>methSD</code> combinations. Use
+this plot to choose thresholds before running Script 02.</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="filter-reference-regions-script-02">3. Filter Reference Regions (Script 02)<a class="anchor" aria-label="anchor" href="#filter-reference-regions-script-02"></a>
+<h2 id="filter-reference-regions-script-02">3. Filter Reference Regions — Script 02<a class="anchor" aria-label="anchor" href="#filter-reference-regions-script-02"></a>
 </h2>
-<p><strong>Run on the reference dataset only.</strong></p>
-<p><code><a href="../reference/filterRegions.html">filterRegions()</a></code> applies a minimum coverage
-(<code>covMin</code>) and methylation standard deviation
-(<code>methSD</code>) threshold to the raw regions. The resulting
-<code>Filtered_Regions.txt</code> is the canonical region set for all
-downstream steps.</p>
+<p><strong>Run on the reference dataset (females) only.</strong></p>
+<p><code><a href="../reference/filterRegions.html">filterRegions()</a></code> applies minimum coverage
+(<code>covMin</code>) and methylation SD (<code>methSD</code>)
+thresholds to the raw regions.</p>
 <div class="section level3">
-<h3 id="choosing-the-sd-threshold-in-the-reference-dataset">Choosing the SD threshold in the reference dataset<a class="anchor" aria-label="anchor" href="#choosing-the-sd-threshold-in-the-reference-dataset"></a>
+<h3 id="key-design-decision-set-methsd-0-for-sex-stratified-analyses">Key design decision: set <code>methSD = 0</code> for sex-stratified
+analyses<a class="anchor" aria-label="anchor" href="#key-design-decision-set-methsd-0-for-sex-stratified-analyses"></a>
 </h3>
 <blockquote>
-<p><strong>Key decision.</strong> The <code>methSD</code> threshold in
-Script 02 controls how variable a region must be <em>in the reference
-dataset</em> to be retained.</p>
-<ul>
-<li>If your datasets represent the same biological group at different
-timepoints (e.g., longitudinal), a moderate threshold (0.05–0.08) in the
-reference dataset is sensible.</li>
-<li>If your datasets represent <strong>different biological
-groups</strong> (e.g., female vs. male), a region that is variable in
-one group may be nearly invariant in the other. In this case we
-recommend setting <code>methSD = 0</code> (or a deliberately permissive
-value such as 0.02) here, and applying the decisive joint-variability
-filter in Script 05b instead. This prevents the reference group from
-excluding regions that are biologically meaningful only in the other
-group.</li>
-</ul>
+<p>A region that is variable in females may be nearly invariant in males
+(or vice versa). If you apply a strict SD filter to the reference
+dataset here, you risk discarding regions that are biologically
+meaningful only in males before male data is ever examined.</p>
+<p><strong>Recommended approach for group comparisons:</strong> set
+<code>methSD = 0</code> (or a very permissive value) in Script 02 and
+apply the decisive SD filter jointly across both sexes in Script 05b.
+Apply only a coverage prefilter here (<code>covMin = 10</code> in the
+BGW analysis). In other analysis settings the <code>methSD = 0.05</code>
+on the reference has worked. So feel free to try that too</p>
 </blockquote>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># ── Conservative/permissive reference SD filter ───────────────────────────────</span></span>
-<span><span class="co"># For longitudinal data: use a moderate methSD (e.g. 0.05–0.08)</span></span>
-<span><span class="co"># For sex-stratified or group comparisons: use methSD = 0 and rely on Script 05b</span></span>
-<span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Coverage prefilter only — methSD = 0 is deliberate for sex-stratified design</span></span>
 <span><span class="va">regions_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterRegions.html">filterRegions</a></span><span class="op">(</span></span>
-<span>  regions   <span class="op">=</span> <span class="va">regions_raw</span>,</span>
-<span>  covMin    <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  methSD    <span class="op">=</span> <span class="fl">0.05</span>,           <span class="co"># set to 0 for sex-stratified designs</span></span>
-<span>  file      <span class="op">=</span> <span class="st">"comethyl_output/consensus/02_reference_region_filter/Baseline/cov3_75pct/covMin4_methSD0p05/Filtered_Regions.txt"</span></span>
+<span>  regions <span class="op">=</span> <span class="va">regions_raw</span>,</span>
+<span>  covMin  <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  methSD  <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/02_reference_region_filter/females/cov3_75pct/covMin10_methSD0/Filtered_Regions.txt"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/plotRegionStats.html">plotRegionStats</a></span><span class="op">(</span><span class="va">regions_filtered</span>, maxQuantile <span class="op">=</span> <span class="fl">0.99</span>,</span>
-<span>                file <span class="op">=</span> <span class="st">"comethyl_output/consensus/02_reference_region_filter/Baseline/cov3_75pct/covMin4_methSD0p05/Filtered_Region_Plots.pdf"</span><span class="op">)</span></span></code></pre></div>
+<span>                file <span class="op">=</span> <span class="st">"comethyl_output/consensus/02_reference_region_filter/females/cov3_75pct/covMin10_methSD0/Filtered_Region_Plots.pdf"</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Filtered_Region_Plots_females.png" alt="Figure 4. Filtered Region Plots — Females"><div class="figcaption">Figure 4. Filtered Region Plots — Females</div>
+</div>
+<p><em>Figure 4. Region statistics after applying the coverage prefilter
+(<code>covMin = 20</code>, <code>methSD = 0</code>). No SD filter is
+applied at this stage — that happens jointly in Script 05b.</em></p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="build-reference-region-methylation-script-03">4. Build Reference Region Methylation (Script 03)<a class="anchor" aria-label="anchor" href="#build-reference-region-methylation-script-03"></a>
+<h2 id="build-reference-region-methylation-script-03">4. Build Reference Region Methylation — Script 03<a class="anchor" aria-label="anchor" href="#build-reference-region-methylation-script-03"></a>
 </h2>
-<p><strong>Run on the reference dataset only.</strong></p>
-<p><code><a href="../reference/getRegionMeth.html">getRegionMeth()</a></code> calculates region-level methylation from
-the filtered BSseq object over the canonical reference regions.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">meth_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRegionMeth.html">getRegionMeth</a></span><span class="op">(</span></span>
+<p><strong>Run on the reference dataset (females) only.</strong></p>
+<p><code><a href="../reference/getRegionMeth.html">getRegionMeth()</a></code> calculates region-level percent
+methylation from the filtered BSseq object using the canonical reference
+regions from Script 02.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">meth_females_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRegionMeth.html">getRegionMeth</a></span><span class="op">(</span></span>
 <span>  regions <span class="op">=</span> <span class="va">regions_filtered</span>,</span>
-<span>  bs      <span class="op">=</span> <span class="va">bs_base</span>,</span>
-<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/03_region_methylation/Baseline/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"</span></span>
+<span>  bs      <span class="op">=</span> <span class="va">bs_females</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/03_region_methylation/females/cov3_75pct/covMin10_methSD0/Region_Methylation.rds"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="align-other-datasets-to-reference-cpgs-script-04">5. Align Other Datasets to Reference CpGs (Script 04)<a class="anchor" aria-label="anchor" href="#align-other-datasets-to-reference-cpgs-script-04"></a>
+<h2 id="align-other-datasets-to-reference-cpgs-script-04">5. Align Other Datasets to Reference CpGs — Script 04<a class="anchor" aria-label="anchor" href="#align-other-datasets-to-reference-cpgs-script-04"></a>
 </h2>
-<p><strong>Run on non-reference datasets only.</strong></p>
-<p>Non-reference datasets are aligned to the CpG universe of the
-reference filtered BSseq object using <code>subsetByOverlaps()</code>.
-This ensures that all datasets cover exactly the same CpGs before region
-methylation is calculated.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load reference filtered BSseq as the CpG universe</span></span>
-<span><span class="va">bs_base_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
-<span>  <span class="st">"comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Filtered_BSseq.rds"</span></span>
+<p><strong>Run on non-reference datasets (males) only.</strong></p>
+<p>The male CpG_report files are restricted to the CpG universe of the
+female filtered BSseq using <code>subsetByOverlaps()</code>. A
+permissive filter (<code>cov = 3</code>, <code>perSample = 0.75</code>)
+is then applied to remove any remaining low-coverage CpGs from the
+aligned object.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bs_females_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/01_reference_filter_regions/females/cov3_75pct/Filtered_BSseq.rds"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># ── 36–38 weeks ──────────────────────────────────────────────────────────────</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"cytosine_reports/36-38wk/"</span><span class="op">)</span></span>
-<span><span class="va">bs_36wk_unfiltered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGs.html">getCpGs</a></span><span class="op">(</span></span>
-<span>  colData <span class="op">=</span> <span class="va">colData_36wk</span>,</span>
-<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/04_align_to_reference_cpgs/36-38wk/Unfiltered_BSseq.rds"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"data/processed/cytosine_reports/"</span><span class="op">)</span></span>
+<span><span class="va">bs_males_unfiltered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCpGs.html">getCpGs</a></span><span class="op">(</span></span>
+<span>  colData <span class="op">=</span> <span class="va">colData_males</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/04_align_to_reference_cpgs/males/Unfiltered_BSseq.rds"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"../../"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"../../.."</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Restrict to reference CpG universe</span></span>
-<span><span class="va">bs_36wk_aligned</span> <span class="op">&lt;-</span> <span class="fu">subsetByOverlaps</span><span class="op">(</span><span class="va">bs_36wk_unfiltered</span>, <span class="va">bs_base_filtered</span><span class="op">)</span></span>
+<span><span class="co"># Restrict males to the reference (female) CpG universe</span></span>
+<span><span class="va">bs_males_aligned</span> <span class="op">&lt;-</span> <span class="fu">subsetByOverlaps</span><span class="op">(</span><span class="va">bs_males_unfiltered</span>, <span class="va">bs_females_filtered</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Apply a permissive filter (very low thresholds — we just want NA-free data)</span></span>
-<span><span class="va">bs_36wk_aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterCpGs.html">filterCpGs</a></span><span class="op">(</span></span>
-<span>  bs        <span class="op">=</span> <span class="va">bs_36wk_aligned</span>,</span>
-<span>  cov       <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  perSample <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>  file      <span class="op">=</span> <span class="st">"comethyl_output/consensus/04_align_to_reference_cpgs/36-38wk/Filtered_BSseq.rds"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Repeat for Postpartum ...</span></span></code></pre></div>
+<span><span class="va">bs_males_aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterCpGs.html">filterCpGs</a></span><span class="op">(</span></span>
+<span>  bs        <span class="op">=</span> <span class="va">bs_males_aligned</span>,</span>
+<span>  cov       <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  perSample <span class="op">=</span> <span class="fl">0.75</span>,</span>
+<span>  file      <span class="op">=</span> <span class="st">"comethyl_output/consensus/04_align_to_reference_cpgs/males/Filtered_BSseq.rds"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="build-non-reference-region-methylation-script-05">6. Build Non-Reference Region Methylation (Script 05)<a class="anchor" aria-label="anchor" href="#build-non-reference-region-methylation-script-05"></a>
+<h2 id="build-male-region-methylation-script-05">6. Build Male Region Methylation — Script 05<a class="anchor" aria-label="anchor" href="#build-male-region-methylation-script-05"></a>
 </h2>
-<p><strong>Run on non-reference datasets only.</strong></p>
-<p>Region methylation is calculated for each non-reference dataset using
-the same canonical reference regions from Script 02.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">regions_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>  <span class="st">"comethyl_output/consensus/02_reference_region_filter/Baseline/cov3_75pct/covMin4_methSD0p05/Filtered_Regions.txt"</span>,</span>
-<span>  header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">meth_36wk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRegionMeth.html">getRegionMeth</a></span><span class="op">(</span></span>
+<p><strong>Run on non-reference datasets (males) only.</strong></p>
+<p>Region methylation is calculated for males using the same canonical
+reference regions from Script 02. This ensures both datasets have
+methylation matrices over identical regions.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">meth_males_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRegionMeth.html">getRegionMeth</a></span><span class="op">(</span></span>
 <span>  regions <span class="op">=</span> <span class="va">regions_filtered</span>,</span>
-<span>  bs      <span class="op">=</span> <span class="va">bs_36wk_aligned</span>,</span>
-<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/03_region_methylation/36-38wk/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Repeat for Postpartum ...</span></span></code></pre></div>
+<span>  bs      <span class="op">=</span> <span class="va">bs_males_aligned</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/03_region_methylation/males/cov3_75pct/covMin10_methSD0/Region_Methylation.rds"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="filter-shared-complete-regions-script-05b">7. Filter Shared, Complete Regions (Script 05b)<a class="anchor" aria-label="anchor" href="#filter-shared-complete-regions-script-05b"></a>
+<h2 id="filter-shared-complete-regions-script-05b">7. Filter Shared, Complete Regions — Script 05b<a class="anchor" aria-label="anchor" href="#filter-shared-complete-regions-script-05b"></a>
 </h2>
-<p>This script is unique to the consensus workflow. It takes the region
-methylation matrices from all datasets and identifies the subset of
-regions that are:</p>
-<ul>
-<li>
-<strong>Complete</strong> — present and non-missing in every
-dataset</li>
-<li>
-<strong>Jointly variable</strong> — meeting an SD threshold in every
-dataset (or in a user-specified number of datasets)</li>
-</ul>
+<p>This step is unique to the consensus workflow and is where the
+decisive variability filter is applied. It identifies regions that are
+complete (no missing values) and sufficiently variable in both datasets
+to build a good network.</p>
 <div class="section level3">
 <h3 id="selection-modes">Selection modes<a class="anchor" aria-label="anchor" href="#selection-modes"></a>
 </h3>
@@ -424,363 +540,620 @@ dataset (or in a user-specified number of datasets)</li>
 <tbody>
 <tr class="odd">
 <td><code>complete_only</code></td>
-<td>Regions present and NA-free in all datasets</td>
-<td>Legacy/simple case</td>
+<td>Present and NA-free in every dataset</td>
+<td>Legacy / simple case</td>
 </tr>
 <tr class="even">
 <td><code>joint_sd_all</code></td>
 <td>Complete AND SD ≥ threshold in <strong>every</strong> dataset</td>
-<td><strong>Recommended for sex-stratified or group
-comparisons</strong></td>
+<td><strong>Recommended for sex-stratified analyses</strong></td>
 </tr>
 <tr class="odd">
 <td><code>joint_sd_any</code></td>
-<td>Complete AND SD ≥ threshold in <strong>at least one</strong>
-dataset</td>
-<td>Discovery; may retain invariant regions in some datasets</td>
+<td>Complete AND SD ≥ threshold in at least one dataset</td>
+<td>Discovery; may retain low-variability regions in some groups</td>
 </tr>
 <tr class="even">
 <td><code>joint_sd_min_n</code></td>
 <td>Complete AND SD ≥ threshold in at least N datasets</td>
-<td>Flexible middle ground</td>
+<td>Flexible middle ground for 3+ datasets</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
 <p><strong>Recommended SD value.</strong> A threshold of
-<code>joint_meth_sd = 0.07</code> (equivalent to 7% methylation SD)
-works well for WGBS blood data. Examine the per-region SD distribution
-plots in Script 02 to calibrate this for your data. Regions below this
-threshold typically lack sufficient biological variability to contribute
-meaningful signal to the network.</p>
+<code>joint_meth_sd = 0.08</code> (8% methylation SD) is used in the BGW
+analysis. This ensures every retained region has enough biological
+variability to contribute meaningful signal in both females and males.
+Examine the per-region SD distribution from Script 01 to calibrate for
+your data — the <code>--write_sd_table TRUE</code> flag outputs
+per-region SD diagnostics to help.</p>
 </blockquote>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load all region methylation matrices</span></span>
-<span><span class="va">meth_base</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"comethyl_output/consensus/03_region_methylation/Baseline/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"</span><span class="op">)</span></span>
-<span><span class="va">meth_36wk</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"comethyl_output/consensus/03_region_methylation/36-38wk/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"</span><span class="op">)</span></span>
-<span><span class="va">meth_pp</span>       <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"comethyl_output/consensus/03_region_methylation/Postpartum/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Find regions present in all datasets (complete_only — minimal mode)</span></span>
-<span><span class="va">shared_regions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Reduce</a></span><span class="op">(</span><span class="va">intersect</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">meth_base</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">meth_36wk</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">meth_pp</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">meth_females_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/03_region_methylation/females/cov3_75pct/covMin10_methSD0/Region_Methylation.rds"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">meth_males_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/03_region_methylation/males/cov3_75pct/covMin10_methSD0/Region_Methylation.rds"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">meth_base_shared</span> <span class="op">&lt;-</span> <span class="va">meth_base</span><span class="op">[</span><span class="va">shared_regions</span>, <span class="op">]</span></span>
-<span><span class="va">meth_36wk_shared</span> <span class="op">&lt;-</span> <span class="va">meth_36wk</span><span class="op">[</span><span class="va">shared_regions</span>, <span class="op">]</span></span>
-<span><span class="va">meth_pp_shared</span>   <span class="op">&lt;-</span> <span class="va">meth_pp</span><span class="op">[</span><span class="va">shared_regions</span>, <span class="op">]</span></span>
+<span><span class="co"># Shared complete regions (joint_sd_all mode)</span></span>
+<span><span class="va">joint_meth_sd</span> <span class="op">&lt;-</span> <span class="fl">0.08</span></span>
+<span><span class="va">shared_regions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">meth_females_raw</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">meth_males_raw</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># ── Joint SD filter (joint_sd_all) ───────────────────────────────────────────</span></span>
-<span><span class="co"># Recommended when comparing groups; apply after all methylation matrices exist</span></span>
-<span><span class="va">joint_meth_sd</span> <span class="op">&lt;-</span> <span class="fl">0.07</span></span>
+<span><span class="va">meth_f</span> <span class="op">&lt;-</span> <span class="va">meth_females_raw</span><span class="op">[</span><span class="va">shared_regions</span>, <span class="op">]</span></span>
+<span><span class="va">meth_m</span> <span class="op">&lt;-</span> <span class="va">meth_males_raw</span><span class="op">[</span><span class="va">shared_regions</span>, <span class="op">]</span></span>
 <span></span>
-<span><span class="va">sd_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">meth_base_shared</span>, <span class="fl">1</span>, <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">sd_36wk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">meth_36wk_shared</span>, <span class="fl">1</span>, <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">sd_pp</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">meth_pp_shared</span>,   <span class="fl">1</span>, <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">sd_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">meth_f</span>, <span class="fl">1</span>, <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">sd_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">meth_m</span>, <span class="fl">1</span>, <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">pass_sd</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">sd_base</span> <span class="op">&gt;=</span> <span class="va">joint_meth_sd</span><span class="op">)</span> <span class="op">&amp;</span></span>
-<span>           <span class="op">(</span><span class="va">sd_36wk</span> <span class="op">&gt;=</span> <span class="va">joint_meth_sd</span><span class="op">)</span> <span class="op">&amp;</span></span>
-<span>           <span class="op">(</span><span class="va">sd_pp</span>   <span class="op">&gt;=</span> <span class="va">joint_meth_sd</span><span class="op">)</span></span>
+<span><span class="va">pass</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">sd_f</span> <span class="op">&gt;=</span> <span class="va">joint_meth_sd</span><span class="op">)</span> <span class="op">&amp;</span> <span class="op">(</span><span class="va">sd_m</span> <span class="op">&gt;=</span> <span class="va">joint_meth_sd</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Regions passing joint SD filter: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">pass</span><span class="op">)</span>, <span class="st">" of "</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pass</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Regions passing joint SD filter: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">pass_sd</span><span class="op">)</span>, <span class="st">" / "</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pass_sd</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">meth_females_final</span> <span class="op">&lt;-</span> <span class="va">meth_f</span><span class="op">[</span><span class="va">pass</span>, <span class="op">]</span></span>
+<span><span class="va">meth_males_final</span>   <span class="op">&lt;-</span> <span class="va">meth_m</span><span class="op">[</span><span class="va">pass</span>, <span class="op">]</span></span>
 <span></span>
-<span><span class="va">meth_base_final</span> <span class="op">&lt;-</span> <span class="va">meth_base_shared</span><span class="op">[</span><span class="va">pass_sd</span>, <span class="op">]</span></span>
-<span><span class="va">meth_36wk_final</span> <span class="op">&lt;-</span> <span class="va">meth_36wk_shared</span><span class="op">[</span><span class="va">pass_sd</span>, <span class="op">]</span></span>
-<span><span class="va">meth_pp_final</span>   <span class="op">&lt;-</span> <span class="va">meth_pp_shared</span><span class="op">[</span><span class="va">pass_sd</span>, <span class="op">]</span></span>
-<span></span>
-<span><span class="co"># Save final matrices for Scripts 06 onward</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">meth_base_final</span>,</span>
-<span>        <span class="st">"comethyl_output/consensus/05b_shared_complete_regions/Baseline_Methylation_Final.rds"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">meth_36wk_final</span>,</span>
-<span>        <span class="st">"comethyl_output/consensus/05b_shared_complete_regions/36-38wk_Methylation_Final.rds"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">meth_pp_final</span>,</span>
-<span>        <span class="st">"comethyl_output/consensus/05b_shared_complete_regions/Postpartum_Methylation_Final.rds"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">meth_females_final</span>,</span>
+<span>        <span class="st">"comethyl_output/consensus/05b_shared_complete_regions/cov3_75pct/covMin10_methSD0_jointSDall0p08/females_Methylation_jointEligible.rds"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">meth_males_final</span>,</span>
+<span>        <span class="st">"comethyl_output/consensus/05b_shared_complete_regions/cov3_75pct/covMin10_methSD0_jointSDall0p08/males_Methylation_jointEligible.rds"</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Joint_SD_Filter_Summary.png" alt="Figure 5. Joint SD Filter Summary"><div class="figcaption">Figure 5. Joint SD Filter Summary</div>
+</div>
+<p><em>Figure 5. Per-region methylation SD distributions for females and
+males before and after the joint SD filter
+(<code>joint_meth_sd = 0.08</code>). Regions below the threshold in
+either group are removed.</em></p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="pc-diagnostics-script-06">8. PC Diagnostics (Script 06)<a class="anchor" aria-label="anchor" href="#pc-diagnostics-script-06"></a>
+<h2 id="pc-diagnostics-script-06">8. PC Diagnostics — Script 06<a class="anchor" aria-label="anchor" href="#pc-diagnostics-script-06"></a>
 </h2>
-<p><strong>Run separately per dataset.</strong></p>
-<p><code><a href="../reference/getPCs.html">getPCs()</a></code> derives the top principal components for each
-dataset. The resulting PC-trait correlation heatmaps and
-variance-explained plots help you decide which PCs to include in the
-methylation adjustment model. PCs associated with technical covariates
-(batch, sequencing depth) should generally be included; PCs associated
-with biological traits of interest should generally be excluded.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># ── Baseline ──────────────────────────────────────────────────────────────────</span></span>
-<span><span class="va">mod_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span>, data <span class="op">=</span> <span class="fu">pData</span><span class="op">(</span><span class="va">bs_base</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">PCs_base</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPCs.html">getPCs</a></span><span class="op">(</span></span>
-<span>  meth  <span class="op">=</span> <span class="va">meth_base_final</span>,</span>
-<span>  mod   <span class="op">=</span> <span class="va">mod_base</span>,</span>
-<span>  file  <span class="op">=</span> <span class="st">"comethyl_output/consensus/06_pc_diagnostics/Baseline/PCs.rds"</span></span>
+<p><strong>Run separately for each dataset.</strong></p>
+<p><code><a href="../reference/getPCs.html">getPCs()</a></code> derives principal components for each dataset.
+The PC-trait correlation heatmaps produced by Script 06 guide the choice
+of which PCs to include in the methylation adjustment. Protected
+biological traits (e.g., child sex, diagnosis) and technical covariates
+(e.g., sequencing batch, coverage) are defined in separate config files
+to inform the v2 adjustment strategy.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mod_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span>, data <span class="op">=</span> <span class="fu">pData</span><span class="op">(</span><span class="va">bs_females</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">PCs_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPCs.html">getPCs</a></span><span class="op">(</span></span>
+<span>  meth <span class="op">=</span> <span class="va">meth_females_final</span>,</span>
+<span>  mod  <span class="op">=</span> <span class="va">mod_females</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/06_pc_diagnostics/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/PCs.rds"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Examine PC-trait associations to choose which PCs to regress out</span></span>
-<span><span class="co"># Plots are saved to the output directory specified by Script 06</span></span>
+<span><span class="co"># Examine PC-trait correlations to guide adjustment choice</span></span>
+<span><span class="co"># Saved to: 06_pc_diagnostics/females/.../PC_Trait_Correlation_Stats_Bicor.tsv</span></span>
 <span></span>
-<span><span class="co"># Repeat for 36-38wk and Postpartum ...</span></span></code></pre></div>
+<span><span class="va">mod_males</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span>, data <span class="op">=</span> <span class="fu">pData</span><span class="op">(</span><span class="va">bs_males_aligned</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">PCs_males</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPCs.html">getPCs</a></span><span class="op">(</span></span>
+<span>  meth <span class="op">=</span> <span class="va">meth_males_final</span>,</span>
+<span>  mod  <span class="op">=</span> <span class="va">mod_males</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/06_pc_diagnostics/males/cov3_75pct/covMin10_methSD0_jointSDall0p08/PCs.rds"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/PC_Variance_Explained_females.png" alt="Figure 6. PC Variance Explained — Females"><div class="figcaption">Figure 6. PC Variance Explained — Females</div>
+</div>
+<p><em>Figure 6. Variance explained by the top 20 PCs for the female
+dataset. The scree plot helps identify how many PCs to include in the
+adjustment.</em></p>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/PC_Trait_Heatmap_females.png" alt="Figure 7. PC-Trait Correlation Heatmap — Females"><div class="figcaption">Figure 7. PC-Trait Correlation Heatmap —
+Females</div>
+</div>
+<p><em>Figure 7. Bicor correlations between PCs and sample traits for
+the female dataset. PCs associated with technical covariates
+(e.g. coverage, batch) are candidates for inclusion in the adjustment
+model.</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="adjust-methylation-script-07">9. Adjust Methylation (Script 07)<a class="anchor" aria-label="anchor" href="#adjust-methylation-script-07"></a>
+<h2 id="adjust-methylation-script-07">9. Adjust Methylation — Script 07<a class="anchor" aria-label="anchor" href="#adjust-methylation-script-07"></a>
 </h2>
-<p><strong>Run separately per dataset.</strong></p>
-<p><code><a href="../reference/adjustRegionMeth.html">adjustRegionMeth()</a></code> regresses the selected PCs out of the
-region methylation matrix. Script 07 supports three adjustment
-strategies:</p>
+<p><strong>Run separately for each dataset.</strong></p>
+<p><code><a href="../reference/adjustRegionMeth.html">adjustRegionMeth()</a></code> regresses selected PCs out of the
+region methylation matrix. Two versions are run and compared:</p>
 <ul>
 <li>
 <strong>v1 (all PCs):</strong> regress out all top PCs. Simplest
-approach.</li>
+approach; may inadvertently remove biological signal if a PC captures
+both technical and biological variance.</li>
 <li>
 <strong>v2 (exclude protected PCs):</strong> exclude PCs
-significantly correlated with traits you want to preserve (e.g.,
-diagnosis, sex).</li>
-<li>
-<strong>v3 (technical PCs only):</strong> regress out only PCs
-correlated with known technical covariates.</li>
+significantly correlated (p &lt; 0.05, bicor) with protected traits such
+as child sex or diagnosis. This preserves biological signal while
+removing technical confounders.</li>
 </ul>
-<p>Examine the sample dendrogram after adjustment — samples should no
-longer cluster strongly by batch.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># ── v1: adjust for all PCs ────────────────────────────────────────────────────</span></span>
-<span><span class="va">methAdj_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adjustRegionMeth.html">adjustRegionMeth</a></span><span class="op">(</span></span>
-<span>  meth  <span class="op">=</span> <span class="va">meth_base_final</span>,</span>
-<span>  PCs   <span class="op">=</span> <span class="va">PCs_base</span>,</span>
-<span>  file  <span class="op">=</span> <span class="st">"comethyl_output/consensus/07_methylation_adjustment/Baseline/v1_all_pcs/Adjusted_Region_Methylation.rds"</span></span>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ── v1: all PCs ───────────────────────────────────────────────────────────────</span></span>
+<span><span class="va">methAdj_females_v1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adjustRegionMeth.html">adjustRegionMeth</a></span><span class="op">(</span></span>
+<span>  meth <span class="op">=</span> <span class="va">meth_females_final</span>,</span>
+<span>  PCs  <span class="op">=</span> <span class="va">PCs_females</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/females_Adjusted_Region_Methylation_allPCs.rds"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">methAdj_base</span>, distance <span class="op">=</span> <span class="st">"euclidean"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span>file <span class="op">=</span> <span class="st">"comethyl_output/consensus/07_methylation_adjustment/Baseline/v1_all_pcs/Sample_Dendrogram.pdf"</span>,</span>
-<span>             expandY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.08</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">methAdj_females_v1</span>, distance <span class="op">=</span> <span class="st">"euclidean"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span></span>
+<span>    file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Sample_Dendrogram.pdf"</span>,</span>
+<span>    expandY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.08</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Repeat for 36-38wk and Postpartum ...</span></span></code></pre></div>
+<span><span class="co"># ── v2: exclude protected PCs ─────────────────────────────────────────────────</span></span>
+<span><span class="co"># Protected traits loaded from config/protected_traits.txt</span></span>
+<span><span class="va">methAdj_females_v2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adjustRegionMeth.html">adjustRegionMeth</a></span><span class="op">(</span></span>
+<span>  meth <span class="op">=</span> <span class="va">meth_females_final</span>,</span>
+<span>  PCs  <span class="op">=</span> <span class="va">PCs_females</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v2_exclude_protected_pcs/females_Adjusted_Region_Methylation_excluding_protected_PCs_bicor.rds"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Repeat v1 and v2 for males ...</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Sample_Dendrogram_females_v1.png" alt="Figure 8. Sample Dendrogram After Adjustment — Females v1"><div class="figcaption">Figure 8. Sample Dendrogram After Adjustment —
+Females v1</div>
+</div>
+<p><em>Figure 8. Sample dendrogram based on adjusted region methylation
+(v1, all PCs) for the female dataset. Samples should no longer cluster
+strongly by technical batch after adjustment.</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="select-consensus-soft-power-script-08">10. Select Consensus Soft Power (Script 08)<a class="anchor" aria-label="anchor" href="#select-consensus-soft-power-script-08"></a>
+<h2 id="select-consensus-soft-power-script-08">10. Select Consensus Soft Power — Script 08<a class="anchor" aria-label="anchor" href="#select-consensus-soft-power-script-08"></a>
 </h2>
-<p><code><a href="../reference/getSoftPower.html">getSoftPower()</a></code> is run on each adjusted methylation
-matrix, and a single soft-thresholding power is selected that achieves
-scale-free topology (R² ≥ 0.8) with a negative slope in
-<strong>every</strong> dataset. Using a shared power ensures the network
-analysis is directly comparable across datasets.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sft_base</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSoftPower.html">getSoftPower</a></span><span class="op">(</span><span class="va">methAdj_base</span>,  corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
-<span>                          file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/Baseline/SoftPower_pearson.rds"</span><span class="op">)</span></span>
-<span><span class="va">sft_36wk</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSoftPower.html">getSoftPower</a></span><span class="op">(</span><span class="va">methAdj_36wk</span>,  corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
-<span>                          file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/36-38wk/SoftPower_pearson.rds"</span><span class="op">)</span></span>
-<span><span class="va">sft_pp</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSoftPower.html">getSoftPower</a></span><span class="op">(</span><span class="va">methAdj_pp</span>,    corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
-<span>                          file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/Postpartum/SoftPower_pearson.rds"</span><span class="op">)</span></span>
+<p><code><a href="../reference/getSoftPower.html">getSoftPower()</a></code> analyses scale-free topology for each
+dataset separately across a range of soft-thresholding powers. A single
+<strong>shared consensus power</strong> must then be chosen — the lowest
+power where R² ≥ 0.8 <strong>and</strong> the slope is negative in
+<strong>both</strong> females and males simultaneously. Using a shared
+power is essential: it ensures the network analysis is directly
+comparable across datasets.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sft_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSoftPower.html">getSoftPower</a></span><span class="op">(</span></span>
+<span>  <span class="va">methAdj_females_v1</span>,</span>
+<span>  corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/females/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_pearson.rds"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sft_males</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getSoftPower.html">getSoftPower</a></span><span class="op">(</span></span>
+<span>  <span class="va">methAdj_males_v1</span>,</span>
+<span>  corType <span class="op">=</span> <span class="st">"pearson"</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/males/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_pearson.rds"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/plotSoftPower.html">plotSoftPower</a></span><span class="op">(</span><span class="va">sft_base</span>, file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/Baseline/SoftPower_Plots.pdf"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotSoftPower.html">plotSoftPower</a></span><span class="op">(</span><span class="va">sft_36wk</span>, file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/36-38wk/SoftPower_Plots.pdf"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotSoftPower.html">plotSoftPower</a></span><span class="op">(</span><span class="va">sft_pp</span>,   file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/Postpartum/SoftPower_Plots.pdf"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Choose the lowest power where R² &gt;= 0.8 AND slope is negative in all datasets</span></span>
-<span><span class="va">chosen_power</span> <span class="op">&lt;-</span> <span class="fl">12</span>   <span class="co"># update based on your plots</span></span>
+<span><span class="fu"><a href="../reference/plotSoftPower.html">plotSoftPower</a></span><span class="op">(</span><span class="va">sft_females</span>,</span>
+<span>              file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/females/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_Plots.pdf"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotSoftPower.html">plotSoftPower</a></span><span class="op">(</span><span class="va">sft_males</span>,</span>
+<span>              file <span class="op">=</span> <span class="st">"comethyl_output/consensus/08_soft_power/males/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_Plots.pdf"</span><span class="op">)</span></span></code></pre></div>
+<p>Examine both plots side by side and identify the lowest power where
+both datasets cross R² = 0.8 with a negative slope. If the two datasets
+cross at different powers, use the <strong>higher</strong> of the two
+values so that scale-free topology is satisfied in both.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># After examining the plots, set the chosen power manually</span></span>
+<span><span class="va">chosen_power</span> <span class="op">&lt;-</span> <span class="fl">12</span>   <span class="co"># update based on your soft power plots</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Chosen consensus soft power: "</span>, <span class="va">chosen_power</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/SoftPower_females_v1.png" alt="Figure 9. Soft Power Plots — Females"><div class="figcaption">Figure 9. Soft Power Plots — Females</div>
+</div>
+<p><em>Figure 9. Scale-free topology fit (R²) and mean connectivity
+across soft power values for the female dataset. Select the lowest power
+where R² ≥ 0.8 with a negative slope.</em></p>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/SoftPower_males_v1.png" alt="Figure 10. Soft Power Plots — Males"><div class="figcaption">Figure 10. Soft Power Plots — Males</div>
+</div>
+<p><em>Figure 10. Scale-free topology fit (R²) and mean connectivity for
+the male dataset. The consensus power must satisfy R² ≥ 0.8 in both
+datasets — use the higher of the two crossing points if they
+differ.</em></p>
+<hr>
+<div class="section level3">
+<h3 id="optional-soft-power-benchmark-scripts-08b-and-08c">Optional: Soft-Power Benchmark — Scripts 08b and 08c<a class="anchor" aria-label="anchor" href="#optional-soft-power-benchmark-scripts-08b-and-08c"></a>
+</h3>
+<blockquote>
+<p><strong>This step is optional.</strong> For large datasets where
+running <code><a href="../reference/getSoftPower.html">getSoftPower()</a></code> on the full region set is
+computationally expensive, Script 08b provides a faster alternative
+using a subsampled region set. If you have already run Script 08 above
+and are satisfied with the chosen power, you can skip to Script 09.</p>
+</blockquote>
+<p>Script 08b runs soft-power analysis on a random subsample of regions
+across multiple seeds and adjustment versions, giving a quick estimate
+of the likely consensus power without the full computational cost.
+Script 08c then compares results across all region-filter candidates in
+a single summary, which is useful when testing multiple
+<code>covMin</code> or <code>joint_meth_sd</code> combinations.</p>
+<p>Key parameters:</p>
+<ul>
+<li>
+<strong><code>subsample_size</code></strong>: number of regions per
+seed (2,000 in BGW) — large enough to be representative, small enough to
+run in minutes.</li>
+<li>
+<strong><code>n_seeds</code></strong>: seeds to average over (5 in
+BGW), reducing the impact of any single subsample.</li>
+<li>
+<strong><code>scale_free_cutoff</code></strong>: R² threshold (0.8
+is standard).</li>
+</ul>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Script 08b is run via command line. The interactive equivalent</span></span>
+<span><span class="co"># for examining results after the run:</span></span>
+<span></span>
+<span><span class="va">sft_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/08b_softpower_benchmark/shared/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/subsample2000/combined_softpower_summary.tsv"</span>,</span>
+<span>  header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">chosen_power</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/08b_softpower_benchmark/shared/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/subsample2000/chosen_power.txt"</span></span>
+<span><span class="op">)</span><span class="op">$</span><span class="va">V1</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Chosen consensus soft power from benchmark (v1): "</span>, <span class="va">chosen_power</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/SoftPower_benchmark_comparison.png" alt="Figure 11. Soft Power Benchmark Comparison — Script 08c"><div class="figcaption">Figure 11. Soft Power Benchmark Comparison —
+Script 08c</div>
+</div>
+<p><em>Figure 11. Summary of soft-power benchmark results across region
+filter candidates and adjustment versions (Script 08c). Use this to
+confirm that the chosen power is consistent across different filter
+choices.</em> .*</p>
 <hr>
 </div>
+</div>
 <div class="section level2">
-<h2 id="identify-consensus-modules-script-09">11. Identify Consensus Modules (Script 09)<a class="anchor" aria-label="anchor" href="#identify-consensus-modules-script-09"></a>
+<h2 id="identify-consensus-modules-script-09">11. Identify Consensus Modules — Script 09<a class="anchor" aria-label="anchor" href="#identify-consensus-modules-script-09"></a>
 </h2>
 <p><code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">blockwiseConsensusModules()</a></code> identifies comethylation
-modules that are consistent across all datasets. Regions are first
-organized into blocks, a full network analysis is performed on each
-block within every dataset, and modules are merged if their eigengenes
-are highly correlated. The resulting module assignments are identical
-for all datasets.</p>
-<p>Key arguments to consider:</p>
+modules that are consistent across both females and males. Two versions
+are run (v1 and v2 adjustment) and compared.</p>
+<p>Key arguments:</p>
 <ul>
 <li>
 <strong><code>power</code></strong>: the consensus soft power
-selected in Script 08.</li>
+selected in Script 08b.</li>
 <li>
-<strong><code>corType</code></strong>: <code>"bicor"</code> is more
-robust to outlier samples; <code>"pearson"</code> has higher
-sensitivity.</li>
+<strong><code>consensus_cor</code></strong>: <code>"pearson"</code>
+(used in BGW) for higher sensitivity.</li>
 <li>
-<strong><code>deepSplit</code></strong>: controls module granularity
-(0–4); higher values give more, smaller modules.</li>
+<strong><code>deep_split</code></strong>: module detection
+sensitivity 0–4; 4 gives more, smaller modules.</li>
 <li>
-<strong><code>minModuleSize</code></strong>: minimum number of
-regions per module; increase to avoid very small modules.</li>
+<strong><code>min_module_size</code></strong>: minimum regions per
+module (50 in BGW); increase to reduce very small modules.</li>
 <li>
-<strong><code>mergeCutHeight</code></strong>: modules with eigengene
-correlation above this threshold are merged; lower values produce fewer,
-broader modules.</li>
+<strong><code>merge_cut_height</code></strong>: modules with
+eigengene correlation above this threshold are merged (0.2 in BGW);
+lower values produce fewer, broader modules.</li>
+<li>
+<strong><code>network_calibration</code></strong>:
+<code>"single quantile"</code> is used in BGW.</li>
 </ul>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Build the multiExpr list required by blockwiseConsensusModules</span></span>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Load final adjusted methylation matrices (v1 shown; repeat for v2)</span></span>
+<span><span class="va">methAdj_females_v1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/females_Adjusted_Region_Methylation_allPCs.rds"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">methAdj_males_v1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/07_methylation_adjustment/males/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/males_Adjusted_Region_Methylation_allPCs.rds"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">multiExpr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  Baseline  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_base</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  <span class="st">"36-38wk"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_36wk</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  Postpartum <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_pp</span><span class="op">)</span><span class="op">)</span></span>
+<span>  females <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_females_v1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  males   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_males_v1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">consensus_modules</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">blockwiseConsensusModules</a></span><span class="op">(</span></span>
 <span>  multiExpr          <span class="op">=</span> <span class="va">multiExpr</span>,</span>
 <span>  power              <span class="op">=</span> <span class="va">chosen_power</span>,</span>
-<span>  corType            <span class="op">=</span> <span class="st">"bicor"</span>,</span>
+<span>  corType            <span class="op">=</span> <span class="st">"pearson"</span>,</span>
 <span>  networkType        <span class="op">=</span> <span class="st">"signed"</span>,</span>
 <span>  TOMType            <span class="op">=</span> <span class="st">"signed"</span>,</span>
 <span>  deepSplit          <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  minModuleSize      <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  mergeCutHeight     <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  minModuleSize      <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  mergeCutHeight     <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>  maxBlockSize       <span class="op">=</span> <span class="fl">40000</span>,</span>
-<span>  networkCalibration <span class="op">=</span> <span class="st">"full quantile"</span>,</span>
+<span>  networkCalibration <span class="op">=</span> <span class="st">"single quantile"</span>,</span>
 <span>  saveTOMs           <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  numericLabels      <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose            <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">consensus_modules</span>,</span>
-<span>        <span class="st">"comethyl_output/consensus/09_consensus_modules/shared/Consensus_Modules.rds"</span><span class="op">)</span></span>
+<span>        <span class="st">"comethyl_output/consensus/09_consensus_modules/shared/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Consensus_Modules.rds"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Region-module assignments (shared across all datasets)</span></span>
 <span><span class="va">module_colors</span> <span class="op">&lt;-</span> <span class="va">consensus_modules</span><span class="op">$</span><span class="va">colors</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Modules detected: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">module_colors</span><span class="op">[</span><span class="va">module_colors</span> <span class="op">!=</span> <span class="st">"grey"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">module_colors</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Region_Dendrograms_v1.png" alt="Figure 12. Region Dendrograms — v1"><div class="figcaption">Figure 12. Region Dendrograms — v1</div>
+</div>
+<p><em>Figure 12. Region dendrograms with consensus module color
+assignments (v1 adjustment). Each color represents a module of
+comethylated regions shared between females and males.</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="examine-consensus-module-diagnostics-script-10">12. Examine Consensus Module Diagnostics (Script 10)<a class="anchor" aria-label="anchor" href="#examine-consensus-module-diagnostics-script-10"></a>
+<h2 id="consensus-module-diagnostics-script-10">12. Consensus Module Diagnostics — Script 10<a class="anchor" aria-label="anchor" href="#consensus-module-diagnostics-script-10"></a>
 </h2>
-<p>After module detection, we examine the consensus eigengene network to
-understand relationships among modules and among samples.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">MEs_base</span> <span class="op">&lt;-</span> <span class="va">consensus_modules</span><span class="op">$</span><span class="va">multiMEs</span><span class="op">$</span><span class="va">Baseline</span><span class="op">$</span><span class="va">data</span></span>
-<span><span class="va">MEs_36wk</span> <span class="op">&lt;-</span> <span class="va">consensus_modules</span><span class="op">$</span><span class="va">multiMEs</span><span class="op">[[</span><span class="st">"36-38wk"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">data</span></span>
-<span><span class="va">MEs_pp</span>   <span class="op">&lt;-</span> <span class="va">consensus_modules</span><span class="op">$</span><span class="va">multiMEs</span><span class="op">$</span><span class="va">Postpartum</span><span class="op">$</span><span class="va">data</span></span>
+<p>After module detection, we examine the eigengene network to
+understand relationships among modules and among samples, separately for
+each dataset.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">MEs_females</span> <span class="op">&lt;-</span> <span class="va">consensus_modules</span><span class="op">$</span><span class="va">multiMEs</span><span class="op">$</span><span class="va">females</span><span class="op">$</span><span class="va">data</span></span>
+<span><span class="va">MEs_males</span>   <span class="op">&lt;-</span> <span class="va">consensus_modules</span><span class="op">$</span><span class="va">multiMEs</span><span class="op">$</span><span class="va">males</span><span class="op">$</span><span class="va">data</span></span>
 <span></span>
-<span><span class="co"># ── Module correlation structure ──────────────────────────────────────────────</span></span>
-<span><span class="va">moduleDendro_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">MEs_base</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">moduleDendro_base</span>, labelSize <span class="op">=</span> <span class="fl">4</span>, nBreaks <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>           file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/Baseline/Module_ME_Dendrogram.pdf"</span><span class="op">)</span></span>
+<span><span class="co"># ── Module correlation structure — females ────────────────────────────────────</span></span>
+<span><span class="va">moduleDendro_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">MEs_females</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">moduleDendro_females</span>, labelSize <span class="op">=</span> <span class="fl">4</span>, nBreaks <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>           file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/females/Module_ME_Dendrogram.pdf"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">moduleCor_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs_base</span>, corType <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">moduleCor_base</span>,</span>
-<span>            rowDendro <span class="op">=</span> <span class="va">moduleDendro_base</span>, colDendro <span class="op">=</span> <span class="va">moduleDendro_base</span>,</span>
-<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/Baseline/Module_Correlation_Heatmap.pdf"</span><span class="op">)</span></span>
+<span><span class="va">moduleCor_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs_females</span>, corType <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">moduleCor_females</span>,</span>
+<span>            rowDendro <span class="op">=</span> <span class="va">moduleDendro_females</span>,</span>
+<span>            colDendro <span class="op">=</span> <span class="va">moduleDendro_females</span>,</span>
+<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/females/Module_Correlation_Heatmap.pdf"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># ── Sample correlation structure ──────────────────────────────────────────────</span></span>
-<span><span class="va">sampleDendro_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">MEs_base</span>, transpose <span class="op">=</span> <span class="cn">TRUE</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">sampleDendro_base</span>, labelSize <span class="op">=</span> <span class="fl">3</span>, nBreaks <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>           file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/Baseline/Sample_ME_Dendrogram.pdf"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">MEs_base</span>,</span>
-<span>            rowDendro <span class="op">=</span> <span class="va">sampleDendro_base</span>, colDendro <span class="op">=</span> <span class="va">moduleDendro_base</span>,</span>
+<span><span class="co"># ── Sample ME heatmap — females ───────────────────────────────────────────────</span></span>
+<span><span class="va">sampleDendro_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span><span class="va">MEs_females</span>, transpose <span class="op">=</span> <span class="cn">TRUE</span>, distance <span class="op">=</span> <span class="st">"bicor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotHeatmap.html">plotHeatmap</a></span><span class="op">(</span><span class="va">MEs_females</span>,</span>
+<span>            rowDendro    <span class="op">=</span> <span class="va">sampleDendro_females</span>,</span>
+<span>            colDendro    <span class="op">=</span> <span class="va">moduleDendro_females</span>,</span>
 <span>            legend.title <span class="op">=</span> <span class="st">"Module\nEigennode"</span>,</span>
-<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/Baseline/Sample_ME_Heatmap.pdf"</span><span class="op">)</span></span>
+<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/10_diagnostics/females/Sample_ME_Heatmap.pdf"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Repeat for 36-38wk and Postpartum ...</span></span></code></pre></div>
+<span><span class="co"># Repeat for males ...</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Module_Correlation_Heatmap_females.png" alt="Figure 13. Module Correlation Heatmap — Females"><div class="figcaption">Figure 13. Module Correlation Heatmap —
+Females</div>
+</div>
+<p><em>Figure 13. Bicor correlation heatmap of module eigengenes for the
+female dataset. Clusters of correlated modules may share biological
+function.</em></p>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Sample_ME_Heatmap_females.png" alt="Figure 14. Sample ME Heatmap — Females"><div class="figcaption">Figure 14. Sample ME Heatmap — Females</div>
+</div>
+<p><em>Figure 14. Module eigennode values per sample for the female
+dataset. Patterns of high or low eigennode values can reveal batch
+effects or biologically meaningful sample subgroups.</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="compute-module-membership-script-11">13. Compute Module Membership (Script 11)<a class="anchor" aria-label="anchor" href="#compute-module-membership-script-11"></a>
+<h2 id="compute-module-membership-script-11">13. Compute Module Membership — Script 11<a class="anchor" aria-label="anchor" href="#compute-module-membership-script-11"></a>
 </h2>
-<p>Module membership quantifies how strongly each region correlates with
-each module eigengene. High membership in a module (kME close to 1 or
-−1) indicates that a region is a core member of that module’s
-comethylation pattern in a given dataset.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Compute membership for each dataset separately</span></span>
-<span><span class="va">membership_base</span> <span class="op">&lt;-</span> <span class="fu">WGCNA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/WGCNA/man/signedKME.html" class="external-link">signedKME</a></span><span class="op">(</span></span>
-<span>  datExpr     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_base</span><span class="op">)</span>,</span>
-<span>  datME       <span class="op">=</span> <span class="va">MEs_base</span>,</span>
-<span>  corFnc      <span class="op">=</span> <span class="st">"bicor"</span>,</span>
-<span>  corOptions  <span class="op">=</span> <span class="st">"use = 'p'"</span></span>
+<p>Module membership (kME) quantifies how strongly each region
+correlates with each module eigengene. High kME (close to 1 or −1)
+indicates a region is a core member of that module in a given dataset.
+Hub genes — the most highly connected members — are identified from the
+top kME regions.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">membership_females</span> <span class="op">&lt;-</span> <span class="fu">WGCNA</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/WGCNA/man/signedKME.html" class="external-link">signedKME</a></span><span class="op">(</span></span>
+<span>  datExpr    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">methAdj_females_v1</span><span class="op">)</span>,</span>
+<span>  datME      <span class="op">=</span> <span class="va">MEs_females</span>,</span>
+<span>  corFnc     <span class="op">=</span> <span class="st">"bicor"</span>,</span>
+<span>  corOptions <span class="op">=</span> <span class="st">"use = 'p'"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">membership_base</span>,</span>
-<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/11_membership/Baseline/Module_Membership.txt"</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">membership_females</span>,</span>
+<span>            file <span class="op">=</span> <span class="st">"comethyl_output/consensus/11_membership/females/Module_Membership.txt"</span>,</span>
 <span>            sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span>, row.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Repeat for 36-38wk and Postpartum ...</span></span></code></pre></div>
+<span><span class="co"># Repeat for males ...</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="test-me-trait-correlations-script-12a">14. Test ME-Trait Correlations (Script 12a)<a class="anchor" aria-label="anchor" href="#test-me-trait-correlations-script-12a"></a>
+<h2 id="me-trait-analysis-script-12a">14. ME-Trait Analysis — Script 12a<a class="anchor" aria-label="anchor" href="#me-trait-analysis-script-12a"></a>
 </h2>
 <p><code><a href="../reference/getMEtraitCor.html">getMEtraitCor()</a></code> tests associations between module
-eigengenes and sample traits using Bicor or Pearson correlation. Run
-separately for each dataset so that dataset-specific trait associations
-can be compared.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">colData_base</span> <span class="op">&lt;-</span> <span class="fu">openxlsx</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openxlsx/man/read.xlsx.html" class="external-link">read.xlsx</a></span><span class="op">(</span><span class="st">"sample_info_Baseline.xlsx"</span>, rowNames <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">MEtraitCor_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getMEtraitCor.html">getMEtraitCor</a></span><span class="op">(</span></span>
-<span>  MEs     <span class="op">=</span> <span class="va">MEs_base</span>,</span>
-<span>  colData <span class="op">=</span> <span class="va">colData_base</span>,</span>
+eigengenes and sample traits using bicor correlation. Run separately for
+each dataset so sex-specific trait associations can be compared.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">MEtraitCor_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getMEtraitCor.html">getMEtraitCor</a></span><span class="op">(</span></span>
+<span>  MEs     <span class="op">=</span> <span class="va">MEs_females</span>,</span>
+<span>  colData <span class="op">=</span> <span class="va">colData_females</span>,</span>
 <span>  corType <span class="op">=</span> <span class="st">"bicor"</span>,</span>
-<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/Baseline/ME_Trait_Correlation_Stats.txt"</span></span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">traitDendro_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs_base</span>, y <span class="op">=</span> <span class="va">colData_base</span>,</span>
-<span>                           corType <span class="op">=</span> <span class="st">"bicor"</span>, robustY <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span><span class="va">traitDendro_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getCor.html">getCor</a></span><span class="op">(</span><span class="va">MEs_females</span>, y <span class="op">=</span> <span class="va">colData_females</span>,</span>
+<span>                              corType <span class="op">=</span> <span class="st">"bicor"</span>, robustY <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu"><a href="../reference/getDendro.html">getDendro</a></span><span class="op">(</span>transpose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">traitDendro_base</span>, labelSize <span class="op">=</span> <span class="fl">3.5</span>, expandY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.65</span>, <span class="fl">0.08</span><span class="op">)</span>,</span>
-<span>           file <span class="op">=</span> <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/Baseline/Trait_Dendrogram.pdf"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotDendro.html">plotDendro</a></span><span class="op">(</span><span class="va">traitDendro_females</span>, labelSize <span class="op">=</span> <span class="fl">3.5</span>, expandY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.65</span>, <span class="fl">0.08</span><span class="op">)</span>,</span>
+<span>           file <span class="op">=</span> <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/females/Trait_Dendrogram.pdf"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span><span class="va">MEtraitCor_base</span>,</span>
-<span>               moduleOrder <span class="op">=</span> <span class="va">moduleDendro_base</span><span class="op">$</span><span class="va">order</span>,</span>
-<span>               traitOrder  <span class="op">=</span> <span class="va">traitDendro_base</span><span class="op">$</span><span class="va">order</span>,</span>
-<span>               file <span class="op">=</span> <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/Baseline/ME_Trait_Correlation_Heatmap.pdf"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span><span class="va">MEtraitCor_females</span>,</span>
+<span>               moduleOrder <span class="op">=</span> <span class="va">moduleDendro_females</span><span class="op">$</span><span class="va">order</span>,</span>
+<span>               traitOrder  <span class="op">=</span> <span class="va">traitDendro_females</span><span class="op">$</span><span class="va">order</span>,</span>
+<span>               file <span class="op">=</span> <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/females/ME_Trait_Correlation_Heatmap.pdf"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Repeat for 36-38wk and Postpartum ...</span></span></code></pre></div>
+<span><span class="co"># Repeat for males ...</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/ME_Trait_Heatmap_females.png" alt="Figure 15. ME-Trait Correlation Heatmap — Females"><div class="figcaption">Figure 15. ME-Trait Correlation Heatmap —
+Females</div>
+</div>
+<p><em>Figure 15. Module eigengene–trait correlation heatmap for the
+female dataset. Significant associations are indicated by stars (p &lt;
+0.05).</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="publication-ready-heatmaps-script-12b">15. Publication-Ready Heatmaps (Script 12b)<a class="anchor" aria-label="anchor" href="#publication-ready-heatmaps-script-12b"></a>
+<h2 id="publication-ready-heatmaps-script-12b">15. Publication-Ready Heatmaps — Script 12b<a class="anchor" aria-label="anchor" href="#publication-ready-heatmaps-script-12b"></a>
 </h2>
 <p>Script 12b generates focused heatmaps for user-defined trait subsets
-and cross-dataset comparison plots (the same trait set shown
-side-by-side for each dataset).</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># After running Script 12a for all datasets, subset to traits of interest</span></span>
-<span><span class="va">traits_of_interest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"BMI"</span>, <span class="st">"Age"</span>, <span class="st">"Parity"</span>, <span class="st">"GestationalAge"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">MEtraitCor_36wk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>  <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/36-38wk/ME_Trait_Correlation_Stats.txt"</span>,</span>
+and cross-dataset comparison plots — the same trait set displayed
+side-by-side for females and males.</p>
+<p>Trait sets are defined in plain-text files under the
+<code>config/presentation_sets/</code> directory, one trait name per
+line. Multiple trait set files can be provided to generate separate
+heatmaps for different groups of traits (e.g., exposures, cell types,
+clinical variables).</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Load stats from Script 12a for both datasets</span></span>
+<span><span class="va">ME_stats_females</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv"</span>,</span>
+<span>  header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">ME_stats_males</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/12a_me_trait_analysis/males/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv"</span>,</span>
 <span>  header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Filter to traits of interest and plot</span></span>
-<span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span></span>
-<span>  <span class="va">MEtraitCor_base</span><span class="op">[</span><span class="va">MEtraitCor_base</span><span class="op">$</span><span class="va">Trait</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">traits_of_interest</span>, <span class="op">]</span>,</span>
-<span>  moduleOrder <span class="op">=</span> <span class="va">moduleDendro_base</span><span class="op">$</span><span class="va">order</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"comethyl_output/consensus/12b_me_trait_presentation/Baseline/ME_Trait_Selected_Heatmap.pdf"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Subset to traits of interest and generate presentation heatmaps</span></span>
+<span><span class="co"># Script 12b handles this automatically via --set_dir</span></span>
+<span><span class="co"># Cross-dataset comparison heatmaps are saved to 12b_me_trait_presentation/cross_dataset/</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/ME_Trait_CrossDataset_Heatmap.png" alt="Figure 15. Cross-Dataset ME-Trait Heatmap"><div class="figcaption">Figure 15. Cross-Dataset ME-Trait Heatmap</div>
+</div>
+<p><em>Figure 15. Cross-dataset ME-trait heatmap showing the same trait
+set for females (left) and males (right). Shared module colors
+facilitate direct comparison of associations across sexes.</em></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="annotate-consensus-modules-script-15">16. Annotate Consensus Modules (Script 15)<a class="anchor" aria-label="anchor" href="#annotate-consensus-modules-script-15"></a>
+<h2 id="annotate-consensus-modules-script-15">16. Annotate Consensus Modules — Script 15<a class="anchor" aria-label="anchor" href="#annotate-consensus-modules-script-15"></a>
 </h2>
 <p>Module annotations are performed once since module assignments are
-shared across datasets. <code><a href="../reference/annotateModule.html">annotateModule()</a></code> adds nearest gene
-information and CpG island context using GREAT and
+shared across both sexes. <code><a href="../reference/annotateModule.html">annotateModule()</a></code> adds nearest
+gene information and CpG island context using GREAT and
 <code>annotatr</code>.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load shared region assignments from Script 09</span></span>
-<span><span class="va">consensus_regions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>  <span class="st">"comethyl_output/consensus/09_consensus_modules/shared/Consensus_Region_Assignments.tsv"</span>,</span>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">consensus_regions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/09_consensus_modules/shared/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Consensus_Region_Assignments.tsv"</span>,</span>
 <span>  header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Annotate all modules</span></span>
-<span><span class="va">regionsAnno</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annotateModule.html">annotateModule</a></span><span class="op">(</span></span>
-<span>  regions <span class="op">=</span> <span class="va">consensus_regions</span>,</span>
-<span>  module  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">consensus_regions</span><span class="op">$</span><span class="va">Module</span><span class="op">[</span><span class="va">consensus_regions</span><span class="op">$</span><span class="va">Module</span> <span class="op">!=</span> <span class="st">"grey"</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>  genome  <span class="op">=</span> <span class="st">"hg38"</span>,</span>
-<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/15_annotation/Annotated_Module_Regions.txt"</span></span>
+<span><span class="va">modules_to_annotate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span></span>
+<span>  <span class="va">consensus_regions</span><span class="op">$</span><span class="va">Module</span><span class="op">[</span><span class="va">consensus_regions</span><span class="op">$</span><span class="va">Module</span> <span class="op">!=</span> <span class="st">"grey"</span><span class="op">]</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Extract gene lists for modules of interest</span></span>
+<span><span class="va">regionsAnno</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annotateModule.html">annotateModule</a></span><span class="op">(</span></span>
+<span>  regions <span class="op">=</span> <span class="va">consensus_regions</span>,</span>
+<span>  module  <span class="op">=</span> <span class="va">modules_to_annotate</span>,</span>
+<span>  genome  <span class="op">=</span> <span class="st">"hg38"</span>,</span>
+<span>  file    <span class="op">=</span> <span class="st">"comethyl_output/consensus/15_module_annotation/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Annotated_Module_Regions.txt"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Extract hub genes for a module of interest</span></span>
 <span><span class="va">geneList_turquoise</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getGeneList.html">getGeneList</a></span><span class="op">(</span><span class="va">regionsAnno</span>, module <span class="op">=</span> <span class="st">"turquoise"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">geneList_turquoise</span><span class="op">)</span></span></code></pre></div>
 <hr>
+</div>
+<div class="section level2">
+<h2 id="functional-enrichment-script-16">17. Functional Enrichment — Script 16<a class="anchor" aria-label="anchor" href="#functional-enrichment-script-16"></a>
+</h2>
+<p>Script 16 runs pathway and gene-set enrichment for selected consensus
+modules using gene lists from Script 15. Modules are selected either
+from an explicit list or automatically from ME-trait associations
+significant in any dataset.</p>
+<div class="section level3">
+<h3 id="available-enrichment-methods">Available enrichment methods<a class="anchor" aria-label="anchor" href="#available-enrichment-methods"></a>
+</h3>
+<p>Script 16 supports four enrichment backends that can be run in any
+combination:</p>
+<table class="table">
+<colgroup>
+<col width="19%">
+<col width="25%">
+<col width="32%">
+<col width="22%">
+</colgroup>
+<thead><tr class="header">
+<th>Flag</th>
+<th>Method</th>
+<th>Database</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>--do_kegg TRUE</code></td>
+<td>KEGG pathway</td>
+<td>KEGG</td>
+<td>Curated metabolic and signaling pathways</td>
+</tr>
+<tr class="even">
+<td><code>--do_go TRUE</code></td>
+<td>Gene Ontology</td>
+<td>GO BP / MF / CC</td>
+<td>Broad biological process / molecular function / cellular
+component</td>
+</tr>
+<tr class="odd">
+<td><code>--do_reactome TRUE</code></td>
+<td>Reactome</td>
+<td>Reactome</td>
+<td>Detailed reaction-level pathway maps</td>
+</tr>
+<tr class="even">
+<td><code>--do_enrichr TRUE</code></td>
+<td>Enrichr</td>
+<td>User-specified</td>
+<td>Hundreds of databases; see below</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="enrichr-database-options">Enrichr database options<a class="anchor" aria-label="anchor" href="#enrichr-database-options"></a>
+</h3>
+<p>Enrichr provides access to a wide range of curated gene-set
+libraries. Databases are specified via <code>--enrichr_dbs</code> as a
+comma-separated list. Commonly used options include:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co"># Transcription factor targets</span></span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="ex">--enrichr_dbs</span> <span class="st">"ENCODE_TF_ChIP-seq_2015,ENCODE_and_ChIP_Atlas_Coexpression_2021"</span></span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="co"># Disease and phenotype associations</span></span>
+<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a><span class="ex">--enrichr_dbs</span> <span class="st">"GWAS_Catalog_2023,DisGeNET,ClinVar_2019"</span></span>
+<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a><span class="co"># Epigenomic and tissue-specific</span></span>
+<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a><span class="ex">--enrichr_dbs</span> <span class="st">"Roadmap_Epigenomics,ENCODE_Histone_Modifications_2023"</span></span>
+<span id="cb24-9"><a href="#cb24-9" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" tabindex="-1"></a><span class="co"># Cell-type specific expression</span></span>
+<span id="cb24-11"><a href="#cb24-11" tabindex="-1"></a><span class="ex">--enrichr_dbs</span> <span class="st">"Human_Gene_Atlas,GTEx_Tissues_V8_2023"</span></span>
+<span id="cb24-12"><a href="#cb24-12" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" tabindex="-1"></a><span class="co"># Metabolic</span></span>
+<span id="cb24-14"><a href="#cb24-14" tabindex="-1"></a><span class="ex">--enrichr_dbs</span> <span class="st">"BioPlanet_2019,WikiPathways_2024_Human"</span></span></code></pre></div>
+<p>To see all available Enrichr databases:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">enrichR</span><span class="op">)</span></span>
+<span><span class="va">dbs</span> <span class="op">&lt;-</span> <span class="fu">enrichR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/enrichR/man/listEnrichrDbs.html" class="external-link">listEnrichrDbs</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dbs</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">dbs</span><span class="op">$</span><span class="va">numChips</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="op">]</span>, <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Enrichr background.</strong> By default Script 16 uses the
+full set of annotated genes as the background
+(<code>--use_enrichr_background TRUE</code>). For WGBS data, restricting
+the background to genes overlapping your input regions
+(<code>--use_enrichr_background FALSE</code>) is more conservative and
+reduces false positives from genes that are not measurable in your
+assay.</p>
+</blockquote>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Script 16 is run from the command line. The interactive equivalent</span></span>
+<span><span class="co"># for examining results:</span></span>
+<span></span>
+<span><span class="co"># KEGG results for a module of interest</span></span>
+<span><span class="va">kegg_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>  <span class="st">"comethyl_output/consensus/16_enrichment/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/turquoise_KEGG.tsv"</span>,</span>
+<span>  header <span class="op">=</span> <span class="cn">TRUE</span>, sep <span class="op">=</span> <span class="st">"\t"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">kegg_results</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">kegg_results</span><span class="op">$</span><span class="va">p.adjust</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Description"</span>, <span class="st">"GeneRatio"</span>, <span class="st">"p.adjust"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/KEGG_turquoise_dotplot.png" alt="Figure 17. KEGG Enrichment — Turquoise Module"><div class="figcaption">Figure 17. KEGG Enrichment — Turquoise
+Module</div>
+</div>
+<p><em>Figure 17. KEGG pathway enrichment dotplot for the turquoise
+module. Dot size reflects the number of genes in the pathway that
+overlap with the module gene list; color reflects the adjusted
+p-value.</em></p>
+<div class="float">
+<img src="Consensus%20Module%20Analysis/Enrichr_summary.png" alt="Figure 18. Enrichr Summary — All Selected Modules"><div class="figcaption">Figure 18. Enrichr Summary — All Selected
+Modules</div>
+</div>
+<p><em>Figure 18. Summary Enrichr dotplot across all selected modules
+for a user-defined database. Each row is a gene set; columns are
+modules.</em></p>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="from-interactive-exploration-to-script-based-production">From Interactive Exploration to Script-Based Production<a class="anchor" aria-label="anchor" href="#from-interactive-exploration-to-script-based-production"></a>
@@ -788,27 +1161,36 @@ information and CpG island context using GREAT and
 <p>The code above is written for interactive learning — running each
 step in an R session lets you examine outputs at each stage and tune
 parameters before committing to a full run. Once you understand the
-pipeline and have settled on parameters, the production workflow uses
-numbered scripts (00–15) that are called from SLURM or the command
-line:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co"># Example: run Script 00 for the Baseline dataset</span></span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="ex">Rscript</span> scripts/consensus/00_import_cpg_reports_consensus.R <span class="dt">\</span></span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  <span class="at">--project_root</span> /path/to/project <span class="dt">\</span></span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>  <span class="at">--dataset_label</span> Baseline <span class="dt">\</span></span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>  <span class="at">--meta_file</span> /path/to/sample_info.xlsx <span class="dt">\</span></span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>  <span class="at">--cyto_dir</span> /path/to/cytosine_reports/Baseline <span class="dt">\</span></span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a>  <span class="at">--workers</span> 8</span></code></pre></div>
+pipeline and have settled on parameters, the recommended workflow uses
+the numbered scripts (00–16) submitted to a cluster via SLURM:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="co">#SBATCH --job-name=consensus_analysis</span></span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="co">#SBATCH --cpus-per-task=30</span></span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="co">#SBATCH --mem=250G</span></span>
+<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a><span class="va">PROJECT</span><span class="op">=</span>/path/to/project</span>
+<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a><span class="va">SCRIPTS</span><span class="op">=</span>/path/to/scripts/consensus</span>
+<span id="cb27-8"><a href="#cb27-8" tabindex="-1"></a></span>
+<span id="cb27-9"><a href="#cb27-9" tabindex="-1"></a><span class="ex">pixi</span> run Rscript <span class="va">$SCRIPTS</span>/00_import_cpg_reports_consensus.R <span class="dt">\</span></span>
+<span id="cb27-10"><a href="#cb27-10" tabindex="-1"></a>  <span class="at">--project_root</span> <span class="va">$PROJECT</span> <span class="dt">\</span></span>
+<span id="cb27-11"><a href="#cb27-11" tabindex="-1"></a>  <span class="at">--dataset_label</span> females <span class="dt">\</span></span>
+<span id="cb27-12"><a href="#cb27-12" tabindex="-1"></a>  <span class="at">--meta_file</span> <span class="va">$PROJECT</span>/data/metadata/merged_qc_females.xlsx <span class="dt">\</span></span>
+<span id="cb27-13"><a href="#cb27-13" tabindex="-1"></a>  <span class="at">--cyto_dir</span> <span class="va">$PROJECT</span>/data/processed/cytosine_reports <span class="dt">\</span></span>
+<span id="cb27-14"><a href="#cb27-14" tabindex="-1"></a>  <span class="at">--workers</span> 8</span>
+<span id="cb27-15"><a href="#cb27-15" tabindex="-1"></a></span>
+<span id="cb27-16"><a href="#cb27-16" tabindex="-1"></a><span class="co"># ... continue with scripts 01–16</span></span></code></pre></div>
 <p>Each script accepts <code>--help</code> to list all available
-arguments. Parameters that require tuning (coverage thresholds, SD
-cutoffs, soft power, module detection settings) are exposed as
-command-line arguments so you can document your choices in the run
-command itself and reproduce the analysis exactly.</p>
+arguments. Key tunable parameters are exposed as command-line flags, and
+every script writes <code>run_parameters.txt</code> and
+<code>sessionInfo.txt</code> to its output directory for a complete
+audit trail.</p>
 <blockquote>
-<p><strong>Tip.</strong> Set your parameter choices interactively first
-(as shown in this vignette), then move to script-based execution for the
-final run. The script output directories include
-<code>run_parameters.txt</code> and <code>sessionInfo.txt</code> for
-every step, providing a complete audit trail.</p>
+<p><strong>Tip.</strong> The output directory naming convention encodes
+your parameter choices — for example,
+<code>cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/</code> — so
+different parameter combinations produce separate, non-overwriting
+outputs. This makes it straightforward to compare filter candidates
+without rerunning the full pipeline.</p>
 </blockquote>
 <hr>
 </div>
