@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this vignette we use Comethyl to construct a **consensus** weighted
+In this vignette, we use Comethyl to construct a **consensus** weighted
 region comethylation network — a network built simultaneously across two
 biological groups (here, **females** and **males**) that share the same
 genomic region definitions. Because modules are identified jointly, any
@@ -16,7 +16,11 @@ particularly in regions related to energy regulation and fat deposition.
 Children (ages 1–4) from mothers with pre-pregnancy BMI 25–40 were
 profiled by whole-genome bisulfite sequencing (WGBS). Females and males
 are analyzed as separate datasets using a shared region set so that
-modules can be compared directly between sexes.
+modules can be compared directly between sexes. This is a test dataset
+which contains chr22 only. For learning the pipeline quickly, I highly
+recommend splitting your dataset into a smaller set of regions like
+chr22. Code used to generate this can be found here [Make minidata for
+`bgw_wgbs_comethyl`](https://github.com/lasallegrp/bgw_wgbs_comethyl/blob/main/tests/scripts/make_minidata/00_make_comethyl_minidata.py)
 
 > **Relationship to other vignettes.** The CpG Cluster Analysis and Gene
 > Body Analysis vignettes document the single-dataset workflow. This
@@ -149,7 +153,13 @@ downstream analysis:
 
 Both versions are run in parallel and compared from Script 08 onward.
 Protected and technical traits are defined in config files
-(`protected_traits.txt`, `technical_traits.txt`).
+(`protected_traits.txt`, `technical_traits.txt`). The only issue to be
+wary of is that the adjustments will be different based on the dataset.
+For instance, females might find no PCs associated with outcomes or
+exposures, while males find some variables associated with exposures or
+outcomes. So in v2, females will basically be v1, but for males v2 will
+actually be a true v2 because it adjusted out variation related to the
+PCs associated with key biological variables.
 
 ------------------------------------------------------------------------
 
@@ -249,9 +259,9 @@ Females](Consensus%20Module%20Analysis/CpG_Totals_females.png)
 Figure 1. CpG Totals — Females
 
 *Figure 1. CpG totals for the female dataset across a range of coverage
-and per-sample cutoffs. Use this plot as well as* CpG_Totals.txt\* to
+and per-sample cutoffs. Use this plot as well as `CpG_Totals.txt` to
 select a `cov` and `perSample` combination that retains a reasonable
-number of CpGs without sacrificing too many samples.\*
+number of CpGs without sacrificing too many samples.*
 
 ------------------------------------------------------------------------
 
@@ -324,17 +334,29 @@ thresholds to the raw regions.
 
 ### Key design decision: set `methSD = 0` for sex-stratified analyses
 
-> A region that is variable in females may be nearly invariant in males
-> (or vice versa). If you apply a strict SD filter to the reference
-> dataset here, you risk discarding regions that are biologically
-> meaningful only in males before male data is ever examined.
->
-> **Recommended approach for group comparisons:** set `methSD = 0` (or a
-> very permissive value) in Script 02 and apply the decisive SD filter
-> jointly across both sexes in Script 05b. Apply only a coverage
-> prefilter here (`covMin = 10` in the BGW analysis). In other analysis
-> settings the `methSD = 0.05` on the reference has worked. So feel free
-> to try that too
+> For earlier analyses, regions were often defined using a single
+> reference dataset. For example, we selected regions in females using
+> `covMin = 10` and `methSD = 0.05`, and then extracted the matching
+> regions in males. This approach can work when the reference dataset
+> captures the major sources of methylation variability. However, it can
+> be problematic for sex-stratified analyses because a region that is
+> variable in males may be nearly invariant in females, or vice versa.
+> If a strict SD filter is applied only to the reference group,
+> sex-specific variable regions may be discarded before the other group
+> is evaluated.
+
+> **Recommended approach for sex-stratified group comparisons:** set
+> `methSD = 0` (or a very permissive value) in Script 02, set
+> `methSD = 0` and apply only the coverage prefilter, such as
+> `covMin = 10` in the BGW analysis. The decisive variability filter
+> should then be applied later in Script 05b using both sex-specific
+> datasets.
+
+> In Script 05b, the preferred SD filter is to retain regions with
+> sufficient variability in either sex, for example SD ≥ 0.05 in females
+> or SD ≥ 0.05 in males. This preserves regions that may be biologically
+> informative in only one sex while still removing regions that are
+> invariant in both groups.
 
 ``` r
 
@@ -356,7 +378,7 @@ Females](Consensus%20Module%20Analysis/Filtered_Region_Plots_females.png)
 Figure 4. Filtered Region Plots — Females
 
 *Figure 4. Region statistics after applying the coverage prefilter
-(`covMin = 20`, `methSD = 0`). No SD filter is applied at this stage —
+(`covMin = 10`, `methSD = 0`). No SD filter is applied at this stage —
 that happens jointly in Script 05b.*
 
 ------------------------------------------------------------------------
@@ -450,7 +472,7 @@ a good network.
 | `joint_sd_any` | Complete AND SD ≥ threshold in at least one dataset | Discovery; may retain low-variability regions in some groups |
 | `joint_sd_min_n` | Complete AND SD ≥ threshold in at least N datasets | Flexible middle ground for 3+ datasets |
 
-> **Recommended SD value.** A threshold of `joint_meth_sd = 0.08` (8%
+> **Recommended SD value.** A threshold of `joint_meth_sd = 0.05` (5%
 > methylation SD) is used in the BGW analysis. This ensures every
 > retained region has enough biological variability to contribute
 > meaningful signal in both females and males. Examine the per-region SD
@@ -468,7 +490,7 @@ meth_males_raw <- readRDS(
 )
 
 # Shared complete regions (joint_sd_all mode)
-joint_meth_sd <- 0.08
+joint_meth_sd <- 0.05
 shared_regions <- intersect(rownames(meth_females_raw), rownames(meth_males_raw))
 
 meth_f <- meth_females_raw[shared_regions, ]
@@ -484,9 +506,9 @@ meth_females_final <- meth_f[pass, ]
 meth_males_final   <- meth_m[pass, ]
 
 saveRDS(meth_females_final,
-        "comethyl_output/consensus/05b_shared_complete_regions/cov3_75pct/covMin10_methSD0_jointSDall0p08/females_Methylation_jointEligible.rds")
+        "comethyl_output/consensus/05b_shared_complete_regions/cov3_75pct/covMin10_methSD0_jointSDall0p05/females_Methylation_jointEligible.rds")
 saveRDS(meth_males_final,
-        "comethyl_output/consensus/05b_shared_complete_regions/cov3_75pct/covMin10_methSD0_jointSDall0p08/males_Methylation_jointEligible.rds")
+        "comethyl_output/consensus/05b_shared_complete_regions/cov3_75pct/covMin10_methSD0_jointSDall0p05/males_Methylation_jointEligible.rds")
 ```
 
 ![Figure 5. Joint SD Filter
@@ -495,7 +517,7 @@ Summary](Consensus%20Module%20Analysis/Joint_SD_Filter_Summary.png)
 Figure 5. Joint SD Filter Summary
 
 *Figure 5. Per-region methylation SD distributions for females and males
-before and after the joint SD filter (`joint_meth_sd = 0.08`). Regions
+before and after the joint SD filter (`joint_meth_sd = 0.05`). Regions
 below the threshold in either group are removed.*
 
 ------------------------------------------------------------------------
@@ -508,8 +530,7 @@ below the threshold in either group are removed.*
 derives principal components for each dataset. The PC-trait correlation
 heatmaps produced by Script 06 guide the choice of which PCs to include
 in the methylation adjustment. Protected biological traits (e.g., child
-sex, diagnosis) and technical covariates (e.g., sequencing batch,
-coverage) are defined in separate config files to inform the v2
+sex, diagnosis) are defined in separate config files to inform the v2
 adjustment strategy.
 
 ``` r
@@ -518,7 +539,7 @@ mod_females <- model.matrix(~1, data = pData(bs_females))
 PCs_females <- getPCs(
   meth = meth_females_final,
   mod  = mod_females,
-  file = "comethyl_output/consensus/06_pc_diagnostics/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/PCs.rds"
+  file = "comethyl_output/consensus/06_pc_diagnostics/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/PCs.rds"
 )
 
 # Examine PC-trait correlations to guide adjustment choice
@@ -528,7 +549,7 @@ mod_males <- model.matrix(~1, data = pData(bs_males_aligned))
 PCs_males <- getPCs(
   meth = meth_males_final,
   mod  = mod_males,
-  file = "comethyl_output/consensus/06_pc_diagnostics/males/cov3_75pct/covMin10_methSD0_jointSDall0p08/PCs.rds"
+  file = "comethyl_output/consensus/06_pc_diagnostics/males/cov3_75pct/covMin10_methSD0_jointSDall0p05/PCs.rds"
 )
 ```
 
@@ -538,8 +559,9 @@ Females](Consensus%20Module%20Analysis/PC_Variance_Explained_females.png)
 Figure 6. PC Variance Explained — Females
 
 *Figure 6. Variance explained by the top 20 PCs for the female dataset.
-The scree plot helps identify how many PCs to include in the
-adjustment.*
+The scree plot helps identify how many PCs to include in the adjustment.
+The PCs in red are what is considered a surrogate variable (SV). For
+females, only 1 PC was considered an SV*
 
 ![Figure 7. PC-Trait Correlation Heatmap —
 Females](Consensus%20Module%20Analysis/PC_Trait_Heatmap_females.png)
@@ -549,6 +571,26 @@ Figure 7. PC-Trait Correlation Heatmap — Females
 *Figure 7. Bicor correlations between PCs and sample traits for the
 female dataset. PCs associated with technical covariates (e.g. coverage,
 batch) are candidates for inclusion in the adjustment model.*
+
+![Figure 8. PC Variance Explained —
+Males](Consensus%20Module%20Analysis/PC_Variance_Explained_males.png)
+
+Figure 8. PC Variance Explained — Males
+
+*Figure 8. Variance explained by the top 20 PCs for the male dataset.
+The scree plot helps identify how many PCs to include in the adjustment.
+The PCs in red are what is considered a surrogate variable (SV). For
+males, only 3 PC was considered an SV. The ones associated with
+variables were protected from adjustment.*
+
+![Figure 9. PC-Trait Correlation Heatmap —
+Males](Consensus%20Module%20Analysis/PC_Trait_Heatmap_males.png)
+
+Figure 9. PC-Trait Correlation Heatmap — Males
+
+*Figure 9. Bicor correlations between PCs and sample traits for the male
+dataset. PCs associated with technical covariates (e.g. coverage, batch)
+are candidates for inclusion in the adjustment model.*
 
 ------------------------------------------------------------------------
 
@@ -574,21 +616,15 @@ versions are run and compared:
 methAdj_females_v1 <- adjustRegionMeth(
   meth = meth_females_final,
   PCs  = PCs_females,
-  file = "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/females_Adjusted_Region_Methylation_allPCs.rds"
+  file = "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/females_Adjusted_Region_Methylation_allPCs.rds"
 )
-
-getDendro(methAdj_females_v1, distance = "euclidean") %>%
-  plotDendro(
-    file    = "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Sample_Dendrogram.pdf",
-    expandY = c(0.25, 0.08)
-  )
 
 # ── v2: exclude protected PCs ─────────────────────────────────────────────────
 # Protected traits loaded from config/protected_traits.txt
 methAdj_females_v2 <- adjustRegionMeth(
   meth = meth_females_final,
   PCs  = PCs_females,
-  file = "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v2_exclude_protected_pcs/females_Adjusted_Region_Methylation_excluding_protected_PCs_bicor.rds"
+  file = "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v2_exclude_protected_pcs/females_Adjusted_Region_Methylation_excluding_protected_PCs_bicor.rds"
 )
 
 # Repeat v1 and v2 for males ...
@@ -620,18 +656,18 @@ comparable across datasets.
 sft_females <- getSoftPower(
   methAdj_females_v1,
   corType = "pearson",
-  file    = "comethyl_output/consensus/08_soft_power/females/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_pearson.rds"
+  file    = "comethyl_output/consensus/08_soft_power/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/SoftPower_pearson.rds"
 )
 sft_males <- getSoftPower(
   methAdj_males_v1,
   corType = "pearson",
-  file    = "comethyl_output/consensus/08_soft_power/males/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_pearson.rds"
+  file    = "comethyl_output/consensus/08_soft_power/males/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/SoftPower_pearson.rds"
 )
 
 plotSoftPower(sft_females,
-              file = "comethyl_output/consensus/08_soft_power/females/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_Plots.pdf")
+              file = "comethyl_output/consensus/08_soft_power/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/SoftPower_Plots.pdf")
 plotSoftPower(sft_males,
-              file = "comethyl_output/consensus/08_soft_power/males/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/SoftPower_Plots.pdf")
+              file = "comethyl_output/consensus/08_soft_power/males/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/SoftPower_Plots.pdf")
 ```
 
 Examine both plots side by side and identify the lowest power where both
@@ -696,12 +732,12 @@ Key parameters:
 # for examining results after the run:
 
 sft_summary <- read.table(
-  "comethyl_output/consensus/08b_softpower_benchmark/shared/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/subsample2000/combined_softpower_summary.tsv",
+  "comethyl_output/consensus/08b_softpower_benchmark/shared/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/subsample2000/combined_softpower_summary.tsv",
   header = TRUE, sep = "\t"
 )
 
 chosen_power <- read.table(
-  "comethyl_output/consensus/08b_softpower_benchmark/shared/cov3_75pct/covMin20_methSD0_jointSDall0p08/v1_all_pcs/subsample2000/chosen_power.txt"
+  "comethyl_output/consensus/08b_softpower_benchmark/shared/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/subsample2000/chosen_power.txt"
 )$V1
 
 message("Chosen consensus soft power from benchmark (v1): ", chosen_power)
@@ -742,10 +778,10 @@ Key arguments:
 
 # Load final adjusted methylation matrices (v1 shown; repeat for v2)
 methAdj_females_v1 <- readRDS(
-  "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/females_Adjusted_Region_Methylation_allPCs.rds"
+  "comethyl_output/consensus/07_methylation_adjustment/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/females_Adjusted_Region_Methylation_allPCs.rds"
 )
 methAdj_males_v1 <- readRDS(
-  "comethyl_output/consensus/07_methylation_adjustment/males/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/males_Adjusted_Region_Methylation_allPCs.rds"
+  "comethyl_output/consensus/07_methylation_adjustment/males/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/males_Adjusted_Region_Methylation_allPCs.rds"
 )
 
 multiExpr <- list(
@@ -770,7 +806,7 @@ consensus_modules <- blockwiseConsensusModules(
 )
 
 saveRDS(consensus_modules,
-        "comethyl_output/consensus/09_consensus_modules/shared/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Consensus_Modules.rds")
+        "comethyl_output/consensus/09_consensus_modules/shared/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/Consensus_Modules.rds")
 
 module_colors <- consensus_modules$colors
 message("Modules detected: ", length(unique(module_colors[module_colors != "grey"])))
@@ -880,14 +916,14 @@ MEtraitCor_females <- getMEtraitCor(
   MEs     = MEs_females,
   colData = colData_females,
   corType = "bicor",
-  file    = "comethyl_output/consensus/12a_me_trait_analysis/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv"
+  file    = "comethyl_output/consensus/12a_me_trait_analysis/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv"
 )
 
 traitDendro_females <- getCor(MEs_females, y = colData_females,
                               corType = "bicor", robustY = FALSE) %>%
   getDendro(transpose = TRUE)
 
-plotDendro(traitDendro_females, labelSize = 3.5, expandY = c(0.65, 0.08),
+plotDendro(traitDendro_females, labelSize = 3.5, expandY = c(0.65, 0.05),
            file = "comethyl_output/consensus/12a_me_trait_analysis/females/Trait_Dendrogram.pdf")
 
 plotMEtraitCor(MEtraitCor_females,
@@ -924,11 +960,11 @@ variables).
 
 # Load stats from Script 12a for both datasets
 ME_stats_females <- read.table(
-  "comethyl_output/consensus/12a_me_trait_analysis/females/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv",
+  "comethyl_output/consensus/12a_me_trait_analysis/females/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv",
   header = TRUE, sep = "\t"
 )
 ME_stats_males <- read.table(
-  "comethyl_output/consensus/12a_me_trait_analysis/males/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv",
+  "comethyl_output/consensus/12a_me_trait_analysis/males/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/ME_Trait_Correlation_Stats_Bicor.tsv",
   header = TRUE, sep = "\t"
 )
 
@@ -959,7 +995,7 @@ adds nearest gene information and CpG island context using GREAT and
 ``` r
 
 consensus_regions <- read.table(
-  "comethyl_output/consensus/09_consensus_modules/shared/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Consensus_Region_Assignments.tsv",
+  "comethyl_output/consensus/09_consensus_modules/shared/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/Consensus_Region_Assignments.tsv",
   header = TRUE, sep = "\t"
 )
 
@@ -971,7 +1007,7 @@ regionsAnno <- annotateModule(
   regions = consensus_regions,
   module  = modules_to_annotate,
   genome  = "hg38",
-  file    = "comethyl_output/consensus/15_module_annotation/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/Annotated_Module_Regions.txt"
+  file    = "comethyl_output/consensus/15_module_annotation/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/Annotated_Module_Regions.txt"
 )
 
 # Extract hub genes for a module of interest
@@ -1046,7 +1082,7 @@ head(dbs[order(dbs$numChips, decreasing = TRUE), ], 20)
 
 # KEGG results for a module of interest
 kegg_results <- read.table(
-  "comethyl_output/consensus/16_enrichment/cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/turquoise_KEGG.tsv",
+  "comethyl_output/consensus/16_enrichment/cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/turquoise_KEGG.tsv",
   header = TRUE, sep = "\t"
 )
 head(kegg_results[order(kegg_results$p.adjust), c("Description", "GeneRatio", "p.adjust")])
@@ -1105,7 +1141,7 @@ directory for a complete audit trail.
 
 > **Tip.** The output directory naming convention encodes your parameter
 > choices — for example,
-> `cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/` — so
+> `cov3_75pct/covMin10_methSD0_jointSDall0p05/v1_all_pcs/` — so
 > different parameter combinations produce separate, non-overwriting
 > outputs. This makes it straightforward to compare filter candidates
 > without rerunning the full pipeline.
