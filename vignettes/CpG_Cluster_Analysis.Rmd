@@ -1,6 +1,6 @@
 ---
 title: "CpG Cluster Analysis"
-author: "Charles Mordaunt and Julia Mouat"
+author: "Original authors: Charles Mordaunt and Julia Mouat, and modified by George Kuodza"
 date: "`r Sys.Date()`"
 output:
   prettydoc::html_pretty:
@@ -315,8 +315,6 @@ plotMEtraitCor(MEtraitCor, moduleOrder = moduleDendro$order, traitOrder = traitD
 plotMEtraitCor(MEtraitCor, moduleOrder = moduleDendro$order, traitOrder = traitDendro$order, topOnly = TRUE, label.type = "p", label.size = 4, label.nudge_y = 0, legend.position = c(1.11, 0.795), colColorMargins = c(-1,4.75,0.5,10.1), file = "Top_ME_Trait_Correlation_Heatmap.pdf", width = 8.5, height = 4.25)
 ```
 
-![Figure 16. Top ME Trait Correlation Heatmap](CpG Cluster Analysis/Top_ME_Trait_Correlation_Heatmap.png)
-
 ## Explore Significant Module Eigennode - Trait Correlations
 ### Plot Module Eigennodes vs Traits
 To further investigate top module-trait associations, `plotMEtraitDot()` creates a dotplot of a module eigennode by a categorical trait, while `plotMEtraitScatter()` creates a scatterplot of a module eigennode by a continuous trait. Any module and any sample trait can be selected. These plots can help verify that the module-trait association is robust and identify any outlier samples. Here we see that the bisque 4 module has lower methylation in ASD samples, while the pale turquoise module methylation correlates (in opposite directions) with the proportion of granulocytes and B cells.
@@ -325,19 +323,19 @@ To further investigate top module-trait associations, `plotMEtraitDot()` creates
 plotMEtraitDot(MEs$bisque4, trait = colData$Diagnosis_ASD, traitCode = c("TD" = 0, "ASD" = 1), colors = c("TD" = "#3366CC", "ASD" = "#FF3366"), ylim = c(-0.2,0.2), xlab = "Diagnosis", ylab = "Bisque 4 Module Eigennode", file = "bisque4_ME_Diagnosis_Dotplot.pdf")
 ```
 
-![Figure 17. Bisque4 ME Diagnosis Dotplot](CpG Cluster Analysis/bisque4_ME_Diagnosis_Dotplot.png)
+![Figure 16. Bisque4 ME Diagnosis Dotplot](CpG Cluster Analysis/bisque4_ME_Diagnosis_Dotplot.png)
 
 ```
 plotMEtraitScatter(MEs$paleturquoise, trait = colData$Gran, ylim = c(-0.15,0.15), xlab = "Granulocytes", ylab = "Pale Turquoise Module Eigennode", file = "paleturquoise_ME_Granulocytes_Scatterplot.pdf")
 ```
 
-![Figure 18. Pale Turquoise ME Granulocytes Scatterplot](CpG Cluster Analysis/paleturquoise_ME_Granulocytes_Scatterplot.png)
+![Figure 17. Pale Turquoise ME Granulocytes Scatterplot](CpG Cluster Analysis/paleturquoise_ME_Granulocytes_Scatterplot.png)
 
 ```
 plotMEtraitScatter(MEs$paleturquoise, trait = colData$Bcell, ylim = c(-0.15,0.15), xlab = "B-cells", ylab = "Pale Turquoise Module Eigennode", file = "paleturquoise_ME_Bcells_Scatterplot.pdf")
 ```
 
-![Figure 19. Pale Turquoise ME B Cells Scatterplot](CpG Cluster Analysis/paleturquoise_ME_Bcells_Scatterplot.png)
+![Figure 18. Pale Turquoise ME B Cells Scatterplot](CpG Cluster Analysis/paleturquoise_ME_Bcells_Scatterplot.png)
 
 ### Plot Region Methylation vs Traits
 Next we dig further into the data and plot the raw methylation values against a sample trait using `plotMethTrait()`. These values are not adjusted by principal components, just centered on the mean methylation for each region. This allows you to see the change in actual methylation across regions in a module in relation to a trait. We plot the same associations as above. 
@@ -347,19 +345,19 @@ regions <- modules$regions
 plotMethTrait("bisque4", regions = regions, meth = meth, trait = colData$Diagnosis_ASD, traitCode = c("TD" = 0, "ASD" = 1), traitColors = c("TD" = "#3366CC", "ASD" = "#FF3366"), trait.legend.title = "Diagnosis", file = "bisque4_Module_Methylation_Diagnosis_Heatmap.pdf")
 ```              
 
-![Figure 20. Bisque4 Module Methylation Diagnosis Heatmap](CpG Cluster Analysis/bisque4_Module_Methylation_Diagnosis_Heatmap.png)
+![Figure 19. Bisque4 Module Methylation Diagnosis Heatmap](CpG Cluster Analysis/bisque4_Module_Methylation_Diagnosis_Heatmap.png)
 
 ```
 plotMethTrait("paleturquoise", regions = regions, meth = meth, trait = colData$Gran, expandY = 0.04, trait.legend.title = "Granulocytes", trait.legend.position = c(1.034,3.35), file = "paleturquoise_Module_Methylation_Granulocytes_Heatmap.pdf")
 ```              
 
-![Figure 21. Pale Turquoise Module Methylation Granulocytes Heatmap](CpG Cluster Analysis/paleturquoise_Module_Methylation_Granulocytes_Heatmap.png)
+![Figure 20. Pale Turquoise Module Methylation Granulocytes Heatmap](CpG Cluster Analysis/paleturquoise_Module_Methylation_Granulocytes_Heatmap.png)
 
 ```
 plotMethTrait("paleturquoise", regions = regions, meth = meth, trait = colData$Bcell, expandY = 0.04, trait.legend.title = "B-cells", trait.legend.position = c(1.004,3.35), file = "paleturquoise_Module_Methylation_Bcells_Heatmap.pdf")
 ```              
 
-![Figure 22. Pale Turquoise Module Methylation B-Cells Heatmap](CpG Cluster Analysis/paleturquoise_Module_Methylation_Bcells_Heatmap.png)
+![Figure 21. Pale Turquoise Module Methylation B-Cells Heatmap](CpG Cluster Analysis/paleturquoise_Module_Methylation_Bcells_Heatmap.png)
 
 ## Annotate Modules
 `annotateModule()` annotates a module of choice with nearby gene and CpG island context. Genes are added to regions using GREAT, gene info is added from BioMart, and both gene and CpG island context is added from `annotatr`. `getGeneList()` then extracts just the genes for that module, in the form of the gene symbol, description, Ensembl ID, or NCBI Entrez ID.
@@ -381,14 +379,14 @@ enrich_bisque4 <- enrichModule(regions, module = "bisque4", genome = "hg38", fil
 plotEnrichment(enrich_bisque4, file = "bisque4_Module_Enrichment_Plot.pdf")
 ```
 
-![Figure 23. Bisque4 Module Enrichment Plot](CpG Cluster Analysis/bisque4_Module_Enrichment_Plot.png)
+![Figure 22. Bisque4 Module Enrichment Plot](CpG Cluster Analysis/bisque4_Module_Enrichment_Plot.png)
 
 ```
 enrich_paleturquoise <- enrichModule(regions, module = "paleturquoise", genome = "hg38", file = "paleturquoise_Module_Enrichment.txt")
 plotEnrichment(enrich_paleturquoise, axis.text.y.size = 14, width = 10, file = "paleturquoise_Module_Enrichment_Plot.pdf")
 ```
 
-![Figure 24. Pale Turquoise Module Enrichment Plot](CpG Cluster Analysis/paleturquoise_Module_Enrichment_Plot.png)
+![Figure 23. Pale Turquoise Module Enrichment Plot](CpG Cluster Analysis/paleturquoise_Module_Enrichment_Plot.png)
 
 ## See Also
 
