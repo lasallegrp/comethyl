@@ -1027,7 +1027,7 @@ directory for a complete audit trail.
 > choices — for example,
 > `cov3_75pct/covMin10_methSD0_jointSDall0p08/v1_all_pcs/` — so
 > different parameter combinations produce separate, non-overwriting
-> output trees. This makes it straightforward to compare filter
+> outputs. This makes it straightforward to compare filter
 > candidates without rerunning the full pipeline.
 
 ---
