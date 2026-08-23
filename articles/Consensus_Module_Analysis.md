@@ -1,4 +1,4 @@
-# Consensus Module Analysis
+# Consensus Modules
 
 ## Introduction
 
