@@ -23,7 +23,7 @@ navbar:
       href: articles/Module_Preservation.html
     article4:
       text: Consensus Modules
-      href: articles/Consensus_Modules.html
+      href: articles/Consensus_Module_Analysis.html
 
 home:
   sidebar:
