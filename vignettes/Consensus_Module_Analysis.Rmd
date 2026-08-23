@@ -1,0 +1,750 @@
+---
+title: "Consensus Module Analysis"
+author: "George Eusebio Kuodza"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+vignette: >
+  %\VignetteIndexEntry{Consensus Module Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  eval      = FALSE
+)
+```
+
+## Introduction
+
+In this vignette we use Comethyl to construct a **consensus** weighted
+region comethylation network — a network built simultaneously across two
+or more datasets (e.g., multiple timepoints or two biological groups)
+that share the same genomic region definitions. Because the modules are
+identified jointly, any module that emerges represents comethylation
+structure that is reproducible across datasets rather than idiosyncratic
+to one.
+
+A typical use case is a longitudinal study with samples collected at
+multiple timepoints (Baseline, 36–38 weeks, Postpartum), or a
+sex-stratified study where female and male samples are analyzed
+separately but using a common region set so that modules can be compared
+directly.
+
+The dataset used here consists of three maternal blood WGBS timepoints
+from the Growing Up in Singapore Towards Healthy Outcomes (GUSTO) cohort
+provided as test data in
+[`lasallegrp/bgw_wgbs_comethyl`](https://github.com/lasallegrp/bgw_wgbs_comethyl/tree/main/tests/data/processed/cytosine_reports).
+The three timepoints — **Baseline**, **36–38 weeks**, and **Postpartum**
+— each have their own set of CpG_report files and sample metadata.
+
+> **Relationship to other vignettes.** The CpG Cluster Analysis and Gene
+> Body Analysis vignettes document the single-dataset workflow. This
+> vignette covers the multi-dataset extension. Many of the underlying
+> comethyl functions are the same; the key difference is the reference
+> region strategy and the use of `blockwiseConsensusModules()` from WGCNA.
+
+---
+
+## Environment Setup
+
+All analyses should be run within the comethyl pixi environment to
+ensure reproducibility. If you have not yet set up the environment, see
+the [Get Started vignette](https://lasallegrp.github.io/comethyl/articles/comethyl.html) for full installation instructions.
+
+**Activate the environment before launching R:**
+
+```bash
+# From the repository root
+pixi shell       # activates the environment
+R                # launch R from within it
+
+# Or run scripts directly
+pixi run Rscript scripts/consensus/00_import_cpg_reports_consensus.R --help
+```
+
+---
+
+## Setup
+
+```{r libraries}
+library(tidyverse)
+library(comethyl)
+library(WGCNA)
+library(openxlsx)
+```
+
+## Set Global Options
+
+As in the single-dataset workflow, we disable WGCNA multi-threading
+when working with large region sets (> 150,000 regions). For smaller
+sets or interactive exploration you can enable threads with
+`WGCNA::enableWGCNAThreads()`.
+
+```{r global-options}
+options(stringsAsFactors = FALSE)
+Sys.setenv(R_THREADS = 1)
+WGCNA::disableWGCNAThreads()
+```
+
+---
+
+## Overview of the Consensus Approach
+
+The consensus workflow adds several steps before and after the steps you
+would recognise from the single-dataset vignettes. The overall logic is:
+
+1. **One reference dataset** defines the canonical CpG filter and
+   genomic regions. All other datasets must use exactly these regions.
+2. **Non-reference datasets** are aligned to the reference CpG universe
+   and their region methylation is calculated over the reference regions.
+3. After all datasets have region methylation matrices, a
+   **shared region filter** (Script 05b) keeps only regions that are
+   present and sufficiently variable across every dataset.
+4. PCs are derived and methylation is adjusted independently for each
+   dataset (Scripts 06–07).
+5. A **single consensus soft-power** is chosen that satisfies scale-free
+   topology criteria in every dataset simultaneously (Script 08).
+6. `blockwiseConsensusModules()` identifies modules that are consistent
+   across datasets (Script 09). The resulting module assignments are
+   shared — a region belongs to the same module regardless of which
+   dataset is examined.
+7. Downstream analyses (membership, ME-trait correlations, annotation,
+   enrichment) use these shared assignments.
+
+### Choosing a Reference Dataset
+
+The reference dataset determines which CpGs are retained and which
+genomic regions are defined. This choice should be guided by your
+research question:
+
+- If you have a **baseline or pre-treatment timepoint**, this is usually
+  the natural reference because it defines the methylation landscape
+  before any intervention.
+- If you are comparing **two biological groups** (e.g. female vs. male),
+  choose the group with the larger sample size or the group most central
+  to your hypothesis as the reference.
+- If no single dataset is clearly primary, choose the one with the
+  **highest sequencing depth or most samples**, as it will produce the
+  most stable region definitions.
+
+> **Practical note.** The reference only affects which CpGs and regions
+> are defined in Scripts 01–02. Once regions are defined, all datasets
+> are treated symmetrically in Script 05b onward.
+
+---
+
+## 1. Import CpG Reports (Script 00)
+
+**Run separately for each dataset/timepoint.**
+
+`getCpGs()` reads Bismark CpG_report files into a single BSseq object.
+This step is identical to the single-dataset workflow but is run once
+per dataset. The script also computes and plots CpG totals at different
+coverage and per-sample cutoffs so you can assess data quality before
+choosing a filter.
+
+```{r script-00, eval=FALSE}
+# Interactive equivalent of Script 00 — run for each dataset separately
+
+# ── Baseline (reference) ─────────────────────────────────────────────────────
+colData_base <- openxlsx::read.xlsx("sample_info_Baseline.xlsx", rowNames = TRUE)
+
+setwd("cytosine_reports/Baseline/")
+bs_base_unfiltered <- getCpGs(
+  colData  = colData_base,
+  file     = "comethyl_output/consensus/00_cpg_extraction/Baseline/Unfiltered_BSseq.rds"
+)
+setwd("../../")
+
+CpGtotals_base <- getCpGtotals(
+  bs_base_unfiltered,
+  file = "comethyl_output/consensus/00_cpg_extraction/Baseline/CpG_Totals.txt"
+)
+plotCpGtotals(
+  CpGtotals_base,
+  file = "comethyl_output/consensus/00_cpg_extraction/Baseline/CpG_Totals.pdf"
+)
+
+# ── 36–38 weeks ──────────────────────────────────────────────────────────────
+colData_36wk <- openxlsx::read.xlsx("sample_info_36-38wk.xlsx", rowNames = TRUE)
+
+setwd("cytosine_reports/36-38wk/")
+bs_36wk_unfiltered <- getCpGs(
+  colData = colData_36wk,
+  file    = "comethyl_output/consensus/00_cpg_extraction/36-38wk/Unfiltered_BSseq.rds"
+)
+setwd("../../")
+
+# Repeat getCpGtotals / plotCpGtotals for 36-38wk ...
+
+# ── Postpartum ────────────────────────────────────────────────────────────────
+# ... same pattern for Postpartum
+```
+
+---
+
+## 2. Filter CpGs and Define Reference Regions (Script 01)
+
+**Run on the reference dataset only.**
+
+We filter CpGs in the reference dataset and use `getRegions()` to
+define genomic regions. These regions are the canonical definitions
+reused by all other datasets.
+
+```{r script-01}
+# ── Filter reference CpGs ────────────────────────────────────────────────────
+bs_base <- filterCpGs(
+  bs         = bs_base_unfiltered,
+  cov        = 3,
+  perSample  = 0.75,
+  file       = "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Filtered_BSseq.rds"
+)
+
+# ── Define regions ────────────────────────────────────────────────────────────
+regions_raw <- getRegions(
+  bs   = bs_base,
+  file = "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Regions.txt"
+)
+
+plotRegionStats(regions_raw, maxQuantile = 0.99,
+                file = "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Region_Plots.pdf")
+plotSDstats(regions_raw, maxQuantile = 0.99,
+            file = "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/SD_Plots.pdf")
+
+regionTotals <- getRegionTotals(
+  regions_raw,
+  file = "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Region_Totals.txt"
+)
+plotRegionTotals(
+  regionTotals,
+  file = "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Region_Totals.pdf"
+)
+```
+
+---
+
+## 3. Filter Reference Regions (Script 02)
+
+**Run on the reference dataset only.**
+
+`filterRegions()` applies a minimum coverage (`covMin`) and methylation
+standard deviation (`methSD`) threshold to the raw regions. The
+resulting `Filtered_Regions.txt` is the canonical region set for all
+downstream steps.
+
+### Choosing the SD threshold in the reference dataset
+
+> **Key decision.** The `methSD` threshold in Script 02 controls how
+> variable a region must be *in the reference dataset* to be retained.
+>
+> - If your datasets represent the same biological group at different
+>   timepoints (e.g., longitudinal), a moderate threshold (0.05–0.08)
+>   in the reference dataset is sensible.
+> - If your datasets represent **different biological groups** (e.g.,
+>   female vs. male), a region that is variable in one group may be
+>   nearly invariant in the other. In this case we recommend setting
+>   `methSD = 0` (or a deliberately permissive value such as 0.02) here,
+>   and applying the decisive joint-variability filter in Script 05b
+>   instead. This prevents the reference group from excluding regions
+>   that are biologically meaningful only in the other group.
+
+```{r script-02}
+# ── Conservative/permissive reference SD filter ───────────────────────────────
+# For longitudinal data: use a moderate methSD (e.g. 0.05–0.08)
+# For sex-stratified or group comparisons: use methSD = 0 and rely on Script 05b
+
+regions_filtered <- filterRegions(
+  regions   = regions_raw,
+  covMin    = 4,
+  methSD    = 0.05,           # set to 0 for sex-stratified designs
+  file      = "comethyl_output/consensus/02_reference_region_filter/Baseline/cov3_75pct/covMin4_methSD0p05/Filtered_Regions.txt"
+)
+
+plotRegionStats(regions_filtered, maxQuantile = 0.99,
+                file = "comethyl_output/consensus/02_reference_region_filter/Baseline/cov3_75pct/covMin4_methSD0p05/Filtered_Region_Plots.pdf")
+```
+
+---
+
+## 4. Build Reference Region Methylation (Script 03)
+
+**Run on the reference dataset only.**
+
+`getRegionMeth()` calculates region-level methylation from the filtered
+BSseq object over the canonical reference regions.
+
+```{r script-03}
+meth_base <- getRegionMeth(
+  regions = regions_filtered,
+  bs      = bs_base,
+  file    = "comethyl_output/consensus/03_region_methylation/Baseline/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"
+)
+```
+
+---
+
+## 5. Align Other Datasets to Reference CpGs (Script 04)
+
+**Run on non-reference datasets only.**
+
+Non-reference datasets are aligned to the CpG universe of the reference
+filtered BSseq object using `subsetByOverlaps()`. This ensures that all
+datasets cover exactly the same CpGs before region methylation is
+calculated.
+
+```{r script-04}
+# Load reference filtered BSseq as the CpG universe
+bs_base_filtered <- readRDS(
+  "comethyl_output/consensus/01_reference_filter_regions/Baseline/cov3_75pct/Filtered_BSseq.rds"
+)
+
+# ── 36–38 weeks ──────────────────────────────────────────────────────────────
+setwd("cytosine_reports/36-38wk/")
+bs_36wk_unfiltered <- getCpGs(
+  colData = colData_36wk,
+  file    = "comethyl_output/consensus/04_align_to_reference_cpgs/36-38wk/Unfiltered_BSseq.rds"
+)
+setwd("../../")
+
+# Restrict to reference CpG universe
+bs_36wk_aligned <- subsetByOverlaps(bs_36wk_unfiltered, bs_base_filtered)
+
+# Apply a permissive filter (very low thresholds — we just want NA-free data)
+bs_36wk_aligned <- filterCpGs(
+  bs        = bs_36wk_aligned,
+  cov       = 1,
+  perSample = 0.01,
+  file      = "comethyl_output/consensus/04_align_to_reference_cpgs/36-38wk/Filtered_BSseq.rds"
+)
+
+# Repeat for Postpartum ...
+```
+
+---
+
+## 6. Build Non-Reference Region Methylation (Script 05)
+
+**Run on non-reference datasets only.**
+
+Region methylation is calculated for each non-reference dataset using
+the same canonical reference regions from Script 02.
+
+```{r script-05}
+regions_filtered <- read.table(
+  "comethyl_output/consensus/02_reference_region_filter/Baseline/cov3_75pct/covMin4_methSD0p05/Filtered_Regions.txt",
+  header = TRUE, sep = "\t"
+)
+
+meth_36wk <- getRegionMeth(
+  regions = regions_filtered,
+  bs      = bs_36wk_aligned,
+  file    = "comethyl_output/consensus/03_region_methylation/36-38wk/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds"
+)
+
+# Repeat for Postpartum ...
+```
+
+---
+
+## 7. Filter Shared, Complete Regions (Script 05b)
+
+This script is unique to the consensus workflow. It takes the region
+methylation matrices from all datasets and identifies the subset of
+regions that are:
+
+- **Complete** — present and non-missing in every dataset
+- **Jointly variable** — meeting an SD threshold in every dataset
+  (or in a user-specified number of datasets)
+
+### Selection modes
+
+| Mode | Description | When to use |
+|------|-------------|-------------|
+| `complete_only` | Regions present and NA-free in all datasets | Legacy/simple case |
+| `joint_sd_all` | Complete AND SD ≥ threshold in **every** dataset | **Recommended for sex-stratified or group comparisons** |
+| `joint_sd_any` | Complete AND SD ≥ threshold in **at least one** dataset | Discovery; may retain invariant regions in some datasets |
+| `joint_sd_min_n` | Complete AND SD ≥ threshold in at least N datasets | Flexible middle ground |
+
+> **Recommended SD value.** A threshold of `joint_meth_sd = 0.07` 
+> (equivalent to 7% methylation SD) works well for WGBS blood data.
+> Examine the per-region SD distribution plots in Script 02 to calibrate
+> this for your data. Regions below this threshold typically lack
+> sufficient biological variability to contribute meaningful signal to
+> the network.
+
+```{r script-05b}
+# Load all region methylation matrices
+meth_base     <- readRDS("comethyl_output/consensus/03_region_methylation/Baseline/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds")
+meth_36wk     <- readRDS("comethyl_output/consensus/03_region_methylation/36-38wk/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds")
+meth_pp       <- readRDS("comethyl_output/consensus/03_region_methylation/Postpartum/cov3_75pct/covMin4_methSD0p05/Region_Methylation.rds")
+
+# Find regions present in all datasets (complete_only — minimal mode)
+shared_regions <- Reduce(intersect,
+  list(rownames(meth_base), rownames(meth_36wk), rownames(meth_pp))
+)
+
+meth_base_shared <- meth_base[shared_regions, ]
+meth_36wk_shared <- meth_36wk[shared_regions, ]
+meth_pp_shared   <- meth_pp[shared_regions, ]
+
+# ── Joint SD filter (joint_sd_all) ───────────────────────────────────────────
+# Recommended when comparing groups; apply after all methylation matrices exist
+joint_meth_sd <- 0.07
+
+sd_base <- apply(meth_base_shared, 1, sd, na.rm = TRUE)
+sd_36wk <- apply(meth_36wk_shared, 1, sd, na.rm = TRUE)
+sd_pp   <- apply(meth_pp_shared,   1, sd, na.rm = TRUE)
+
+pass_sd <- (sd_base >= joint_meth_sd) &
+           (sd_36wk >= joint_meth_sd) &
+           (sd_pp   >= joint_meth_sd)
+
+message("Regions passing joint SD filter: ", sum(pass_sd), " / ", length(pass_sd))
+
+meth_base_final <- meth_base_shared[pass_sd, ]
+meth_36wk_final <- meth_36wk_shared[pass_sd, ]
+meth_pp_final   <- meth_pp_shared[pass_sd, ]
+
+# Save final matrices for Scripts 06 onward
+saveRDS(meth_base_final,
+        "comethyl_output/consensus/05b_shared_complete_regions/Baseline_Methylation_Final.rds")
+saveRDS(meth_36wk_final,
+        "comethyl_output/consensus/05b_shared_complete_regions/36-38wk_Methylation_Final.rds")
+saveRDS(meth_pp_final,
+        "comethyl_output/consensus/05b_shared_complete_regions/Postpartum_Methylation_Final.rds")
+```
+
+---
+
+## 8. PC Diagnostics (Script 06)
+
+**Run separately per dataset.**
+
+`getPCs()` derives the top principal components for each dataset. The
+resulting PC-trait correlation heatmaps and variance-explained plots
+help you decide which PCs to include in the methylation adjustment
+model. PCs associated with technical covariates (batch, sequencing
+depth) should generally be included; PCs associated with biological
+traits of interest should generally be excluded.
+
+```{r script-06}
+# ── Baseline ──────────────────────────────────────────────────────────────────
+mod_base <- model.matrix(~1, data = pData(bs_base))
+PCs_base  <- getPCs(
+  meth  = meth_base_final,
+  mod   = mod_base,
+  file  = "comethyl_output/consensus/06_pc_diagnostics/Baseline/PCs.rds"
+)
+
+# Examine PC-trait associations to choose which PCs to regress out
+# Plots are saved to the output directory specified by Script 06
+
+# Repeat for 36-38wk and Postpartum ...
+```
+
+---
+
+## 9. Adjust Methylation (Script 07)
+
+**Run separately per dataset.**
+
+`adjustRegionMeth()` regresses the selected PCs out of the region
+methylation matrix. Script 07 supports three adjustment strategies:
+
+- **v1 (all PCs):** regress out all top PCs. Simplest approach.
+- **v2 (exclude protected PCs):** exclude PCs significantly correlated
+  with traits you want to preserve (e.g., diagnosis, sex).
+- **v3 (technical PCs only):** regress out only PCs correlated with
+  known technical covariates.
+
+Examine the sample dendrogram after adjustment — samples should no
+longer cluster strongly by batch.
+
+```{r script-07}
+# ── v1: adjust for all PCs ────────────────────────────────────────────────────
+methAdj_base <- adjustRegionMeth(
+  meth  = meth_base_final,
+  PCs   = PCs_base,
+  file  = "comethyl_output/consensus/07_methylation_adjustment/Baseline/v1_all_pcs/Adjusted_Region_Methylation.rds"
+)
+
+getDendro(methAdj_base, distance = "euclidean") %>%
+  plotDendro(file = "comethyl_output/consensus/07_methylation_adjustment/Baseline/v1_all_pcs/Sample_Dendrogram.pdf",
+             expandY = c(0.25, 0.08))
+
+# Repeat for 36-38wk and Postpartum ...
+```
+
+---
+
+## 10. Select Consensus Soft Power (Script 08)
+
+`getSoftPower()` is run on each adjusted methylation matrix, and a
+single soft-thresholding power is selected that achieves scale-free
+topology (R² ≥ 0.8) with a negative slope in **every** dataset. Using a
+shared power ensures the network analysis is directly comparable across
+datasets.
+
+```{r script-08}
+sft_base  <- getSoftPower(methAdj_base,  corType = "pearson",
+                          file = "comethyl_output/consensus/08_soft_power/Baseline/SoftPower_pearson.rds")
+sft_36wk  <- getSoftPower(methAdj_36wk,  corType = "pearson",
+                          file = "comethyl_output/consensus/08_soft_power/36-38wk/SoftPower_pearson.rds")
+sft_pp    <- getSoftPower(methAdj_pp,    corType = "pearson",
+                          file = "comethyl_output/consensus/08_soft_power/Postpartum/SoftPower_pearson.rds")
+
+plotSoftPower(sft_base, file = "comethyl_output/consensus/08_soft_power/Baseline/SoftPower_Plots.pdf")
+plotSoftPower(sft_36wk, file = "comethyl_output/consensus/08_soft_power/36-38wk/SoftPower_Plots.pdf")
+plotSoftPower(sft_pp,   file = "comethyl_output/consensus/08_soft_power/Postpartum/SoftPower_Plots.pdf")
+
+# Choose the lowest power where R² >= 0.8 AND slope is negative in all datasets
+chosen_power <- 12   # update based on your plots
+message("Chosen consensus soft power: ", chosen_power)
+```
+
+---
+
+## 11. Identify Consensus Modules (Script 09)
+
+`blockwiseConsensusModules()` identifies comethylation modules that are
+consistent across all datasets. Regions are first organized into blocks,
+a full network analysis is performed on each block within every dataset,
+and modules are merged if their eigengenes are highly correlated. The
+resulting module assignments are identical for all datasets.
+
+Key arguments to consider:
+
+- **`power`**: the consensus soft power selected in Script 08.
+- **`corType`**: `"bicor"` is more robust to outlier samples; `"pearson"` 
+  has higher sensitivity.
+- **`deepSplit`**: controls module granularity (0–4); higher values give 
+  more, smaller modules.
+- **`minModuleSize`**: minimum number of regions per module; increase to 
+  avoid very small modules.
+- **`mergeCutHeight`**: modules with eigengene correlation above this 
+  threshold are merged; lower values produce fewer, broader modules.
+
+```{r script-09}
+# Build the multiExpr list required by blockwiseConsensusModules
+multiExpr <- list(
+  Baseline  = list(data = t(methAdj_base)),
+  "36-38wk" = list(data = t(methAdj_36wk)),
+  Postpartum = list(data = t(methAdj_pp))
+)
+
+consensus_modules <- blockwiseConsensusModules(
+  multiExpr          = multiExpr,
+  power              = chosen_power,
+  corType            = "bicor",
+  networkType        = "signed",
+  TOMType            = "signed",
+  deepSplit          = 4,
+  minModuleSize      = 5,
+  mergeCutHeight     = 0.1,
+  maxBlockSize       = 40000,
+  networkCalibration = "full quantile",
+  saveTOMs           = TRUE,
+  numericLabels      = FALSE,
+  verbose            = 3
+)
+
+saveRDS(consensus_modules,
+        "comethyl_output/consensus/09_consensus_modules/shared/Consensus_Modules.rds")
+
+# Region-module assignments (shared across all datasets)
+module_colors <- consensus_modules$colors
+table(module_colors)
+```
+
+---
+
+## 12. Examine Consensus Module Diagnostics (Script 10)
+
+After module detection, we examine the consensus eigengene network to
+understand relationships among modules and among samples.
+
+```{r script-10}
+MEs_base <- consensus_modules$multiMEs$Baseline$data
+MEs_36wk <- consensus_modules$multiMEs[["36-38wk"]]$data
+MEs_pp   <- consensus_modules$multiMEs$Postpartum$data
+
+# ── Module correlation structure ──────────────────────────────────────────────
+moduleDendro_base <- getDendro(MEs_base, distance = "bicor")
+plotDendro(moduleDendro_base, labelSize = 4, nBreaks = 5,
+           file = "comethyl_output/consensus/10_diagnostics/Baseline/Module_ME_Dendrogram.pdf")
+
+moduleCor_base <- getCor(MEs_base, corType = "bicor")
+plotHeatmap(moduleCor_base,
+            rowDendro = moduleDendro_base, colDendro = moduleDendro_base,
+            file = "comethyl_output/consensus/10_diagnostics/Baseline/Module_Correlation_Heatmap.pdf")
+
+# ── Sample correlation structure ──────────────────────────────────────────────
+sampleDendro_base <- getDendro(MEs_base, transpose = TRUE, distance = "bicor")
+plotDendro(sampleDendro_base, labelSize = 3, nBreaks = 5,
+           file = "comethyl_output/consensus/10_diagnostics/Baseline/Sample_ME_Dendrogram.pdf")
+
+plotHeatmap(MEs_base,
+            rowDendro = sampleDendro_base, colDendro = moduleDendro_base,
+            legend.title = "Module\nEigennode",
+            file = "comethyl_output/consensus/10_diagnostics/Baseline/Sample_ME_Heatmap.pdf")
+
+# Repeat for 36-38wk and Postpartum ...
+```
+
+---
+
+## 13. Compute Module Membership (Script 11)
+
+Module membership quantifies how strongly each region correlates with
+each module eigengene. High membership in a module (kME close to 1 or
+−1) indicates that a region is a core member of that module's
+comethylation pattern in a given dataset.
+
+```{r script-11}
+# Compute membership for each dataset separately
+membership_base <- WGCNA::signedKME(
+  datExpr     = t(methAdj_base),
+  datME       = MEs_base,
+  corFnc      = "bicor",
+  corOptions  = "use = 'p'"
+)
+
+write.table(membership_base,
+            file = "comethyl_output/consensus/11_membership/Baseline/Module_Membership.txt",
+            sep = "\t", quote = FALSE, row.names = TRUE)
+
+# Repeat for 36-38wk and Postpartum ...
+```
+
+---
+
+## 14. Test ME-Trait Correlations (Script 12a)
+
+`getMEtraitCor()` tests associations between module eigengenes and
+sample traits using Bicor or Pearson correlation. Run separately for
+each dataset so that dataset-specific trait associations can be compared.
+
+```{r script-12a}
+colData_base <- openxlsx::read.xlsx("sample_info_Baseline.xlsx", rowNames = TRUE)
+
+MEtraitCor_base <- getMEtraitCor(
+  MEs     = MEs_base,
+  colData = colData_base,
+  corType = "bicor",
+  file    = "comethyl_output/consensus/12a_me_trait_analysis/Baseline/ME_Trait_Correlation_Stats.txt"
+)
+
+traitDendro_base <- getCor(MEs_base, y = colData_base,
+                           corType = "bicor", robustY = FALSE) %>%
+  getDendro(transpose = TRUE)
+
+plotDendro(traitDendro_base, labelSize = 3.5, expandY = c(0.65, 0.08),
+           file = "comethyl_output/consensus/12a_me_trait_analysis/Baseline/Trait_Dendrogram.pdf")
+
+plotMEtraitCor(MEtraitCor_base,
+               moduleOrder = moduleDendro_base$order,
+               traitOrder  = traitDendro_base$order,
+               file = "comethyl_output/consensus/12a_me_trait_analysis/Baseline/ME_Trait_Correlation_Heatmap.pdf")
+
+# Repeat for 36-38wk and Postpartum ...
+```
+
+---
+
+## 15. Publication-Ready Heatmaps (Script 12b)
+
+Script 12b generates focused heatmaps for user-defined trait subsets
+and cross-dataset comparison plots (the same trait set shown
+side-by-side for each dataset).
+
+```{r script-12b}
+# After running Script 12a for all datasets, subset to traits of interest
+traits_of_interest <- c("BMI", "Age", "Parity", "GestationalAge")
+
+MEtraitCor_36wk <- read.table(
+  "comethyl_output/consensus/12a_me_trait_analysis/36-38wk/ME_Trait_Correlation_Stats.txt",
+  header = TRUE, sep = "\t"
+)
+
+# Filter to traits of interest and plot
+plotMEtraitCor(
+  MEtraitCor_base[MEtraitCor_base$Trait %in% traits_of_interest, ],
+  moduleOrder = moduleDendro_base$order,
+  file = "comethyl_output/consensus/12b_me_trait_presentation/Baseline/ME_Trait_Selected_Heatmap.pdf"
+)
+```
+
+---
+
+## 16. Annotate Consensus Modules (Script 15)
+
+Module annotations are performed once since module assignments are
+shared across datasets. `annotateModule()` adds nearest gene
+information and CpG island context using GREAT and `annotatr`.
+
+```{r script-15}
+# Load shared region assignments from Script 09
+consensus_regions <- read.table(
+  "comethyl_output/consensus/09_consensus_modules/shared/Consensus_Region_Assignments.tsv",
+  header = TRUE, sep = "\t"
+)
+
+# Annotate all modules
+regionsAnno <- annotateModule(
+  regions = consensus_regions,
+  module  = unique(consensus_regions$Module[consensus_regions$Module != "grey"]),
+  genome  = "hg38",
+  file    = "comethyl_output/consensus/15_annotation/Annotated_Module_Regions.txt"
+)
+
+# Extract gene lists for modules of interest
+geneList_turquoise <- getGeneList(regionsAnno, module = "turquoise")
+head(geneList_turquoise)
+```
+
+---
+
+## From Interactive Exploration to Script-Based Production
+
+The code above is written for interactive learning — running each step
+in an R session lets you examine outputs at each stage and tune
+parameters before committing to a full run. Once you understand the
+pipeline and have settled on parameters, the production workflow uses
+numbered scripts (00–15) that are called from SLURM or the command line:
+
+```bash
+# Example: run Script 00 for the Baseline dataset
+Rscript scripts/consensus/00_import_cpg_reports_consensus.R \
+  --project_root /path/to/project \
+  --dataset_label Baseline \
+  --meta_file /path/to/sample_info.xlsx \
+  --cyto_dir /path/to/cytosine_reports/Baseline \
+  --workers 8
+```
+
+Each script accepts `--help` to list all available arguments. Parameters
+that require tuning (coverage thresholds, SD cutoffs, soft power, module
+detection settings) are exposed as command-line arguments so you can
+document your choices in the run command itself and reproduce the
+analysis exactly.
+
+> **Tip.** Set your parameter choices interactively first (as shown in
+> this vignette), then move to script-based execution for the final run.
+> The script output directories include `run_parameters.txt` and
+> `sessionInfo.txt` for every step, providing a complete audit trail.
+
+---
+
+## See Also
+
+- [Function reference](https://lasallegrp.github.io/comethyl/reference/index.html)
+- [Get Started vignette](https://lasallegrp.github.io/comethyl/articles/comethyl.html)
+- [CpG Cluster Analysis vignette](https://lasallegrp.github.io/comethyl/articles/CpG_Cluster_Analysis.html)
+- [Gene Body Analysis vignette](https://lasallegrp.github.io/comethyl/articles/Gene_Body_Analysis.html)
+- [Module Preservation vignette](https://lasallegrp.github.io/comethyl/articles/Module_Preservation.html)
