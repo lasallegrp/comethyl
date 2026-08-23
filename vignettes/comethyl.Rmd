@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Comethyl"
-author: "Charles Mordaunt and Julia Mouat"
+author: "Original authors: Charles Mordaunt and Julia Mouat, and modified by George Kuodza"
 date: "`r Sys.Date()`"
 description: "comethyl"
 output:
