@@ -1,5 +1,5 @@
 ---
-title: "Consensus Module Analysis"
+title: "Consensus Modules"
 author: "George Eusebio Kuodza"
 date: "`r Sys.Date()`"
 output:
@@ -7,7 +7,7 @@ output:
     theme: cayman
     highlight: github
 vignette: >
-  %\VignetteIndexEntry{Consensus Module Analysis}
+  %\VignetteIndexEntry{Consensus Modules}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
