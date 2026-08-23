@@ -435,11 +435,6 @@ Figure 15. ME Trait Correlation Heatmap
 
     plotMEtraitCor(MEtraitCor, moduleOrder = moduleDendro$order, traitOrder = traitDendro$order, topOnly = TRUE, label.type = "p", label.size = 4, label.nudge_y = 0, legend.position = c(1.11, 0.795), colColorMargins = c(-1,4.75,0.5,10.1), file = "Top_ME_Trait_Correlation_Heatmap.pdf", width = 8.5, height = 4.25)
 
-![Figure 16. Top ME Trait Correlation
-Heatmap](CpG%20Cluster%20Analysis/Top_ME_Trait_Correlation_Heatmap.png)
-
-Figure 16. Top ME Trait Correlation Heatmap
-
 ## Explore Significant Module Eigennode - Trait Correlations
 
 ### Plot Module Eigennodes vs Traits
@@ -457,24 +452,24 @@ opposite directions) with the proportion of granulocytes and B cells.
 
     plotMEtraitDot(MEs$bisque4, trait = colData$Diagnosis_ASD, traitCode = c("TD" = 0, "ASD" = 1), colors = c("TD" = "#3366CC", "ASD" = "#FF3366"), ylim = c(-0.2,0.2), xlab = "Diagnosis", ylab = "Bisque 4 Module Eigennode", file = "bisque4_ME_Diagnosis_Dotplot.pdf")
 
-![Figure 17. Bisque4 ME Diagnosis
+![Figure 16. Bisque4 ME Diagnosis
 Dotplot](CpG%20Cluster%20Analysis/bisque4_ME_Diagnosis_Dotplot.png)
 
-Figure 17. Bisque4 ME Diagnosis Dotplot
+Figure 16. Bisque4 ME Diagnosis Dotplot
 
     plotMEtraitScatter(MEs$paleturquoise, trait = colData$Gran, ylim = c(-0.15,0.15), xlab = "Granulocytes", ylab = "Pale Turquoise Module Eigennode", file = "paleturquoise_ME_Granulocytes_Scatterplot.pdf")
 
-![Figure 18. Pale Turquoise ME Granulocytes
+![Figure 17. Pale Turquoise ME Granulocytes
 Scatterplot](CpG%20Cluster%20Analysis/paleturquoise_ME_Granulocytes_Scatterplot.png)
 
-Figure 18. Pale Turquoise ME Granulocytes Scatterplot
+Figure 17. Pale Turquoise ME Granulocytes Scatterplot
 
     plotMEtraitScatter(MEs$paleturquoise, trait = colData$Bcell, ylim = c(-0.15,0.15), xlab = "B-cells", ylab = "Pale Turquoise Module Eigennode", file = "paleturquoise_ME_Bcells_Scatterplot.pdf")
 
-![Figure 19. Pale Turquoise ME B Cells
+![Figure 18. Pale Turquoise ME B Cells
 Scatterplot](CpG%20Cluster%20Analysis/paleturquoise_ME_Bcells_Scatterplot.png)
 
-Figure 19. Pale Turquoise ME B Cells Scatterplot
+Figure 18. Pale Turquoise ME B Cells Scatterplot
 
 ### Plot Region Methylation vs Traits
 
@@ -489,24 +484,24 @@ We plot the same associations as above.
     regions <- modules$regions
     plotMethTrait("bisque4", regions = regions, meth = meth, trait = colData$Diagnosis_ASD, traitCode = c("TD" = 0, "ASD" = 1), traitColors = c("TD" = "#3366CC", "ASD" = "#FF3366"), trait.legend.title = "Diagnosis", file = "bisque4_Module_Methylation_Diagnosis_Heatmap.pdf")
 
-![Figure 20. Bisque4 Module Methylation Diagnosis
+![Figure 19. Bisque4 Module Methylation Diagnosis
 Heatmap](CpG%20Cluster%20Analysis/bisque4_Module_Methylation_Diagnosis_Heatmap.png)
 
-Figure 20. Bisque4 Module Methylation Diagnosis Heatmap
+Figure 19. Bisque4 Module Methylation Diagnosis Heatmap
 
     plotMethTrait("paleturquoise", regions = regions, meth = meth, trait = colData$Gran, expandY = 0.04, trait.legend.title = "Granulocytes", trait.legend.position = c(1.034,3.35), file = "paleturquoise_Module_Methylation_Granulocytes_Heatmap.pdf")
 
-![Figure 21. Pale Turquoise Module Methylation Granulocytes
+![Figure 20. Pale Turquoise Module Methylation Granulocytes
 Heatmap](CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Granulocytes_Heatmap.png)
 
-Figure 21. Pale Turquoise Module Methylation Granulocytes Heatmap
+Figure 20. Pale Turquoise Module Methylation Granulocytes Heatmap
 
     plotMethTrait("paleturquoise", regions = regions, meth = meth, trait = colData$Bcell, expandY = 0.04, trait.legend.title = "B-cells", trait.legend.position = c(1.004,3.35), file = "paleturquoise_Module_Methylation_Bcells_Heatmap.pdf")
 
-![Figure 22. Pale Turquoise Module Methylation B-Cells
+![Figure 21. Pale Turquoise Module Methylation B-Cells
 Heatmap](CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Bcells_Heatmap.png)
 
-Figure 22. Pale Turquoise Module Methylation B-Cells Heatmap
+Figure 21. Pale Turquoise Module Methylation B-Cells Heatmap
 
 ## Annotate Modules
 
@@ -546,18 +541,18 @@ infection and other immune processes.
     enrich_bisque4 <- enrichModule(regions, module = "bisque4", genome = "hg38", file = "bisque4_Module_Enrichment.txt")
     plotEnrichment(enrich_bisque4, file = "bisque4_Module_Enrichment_Plot.pdf")
 
-![Figure 23. Bisque4 Module Enrichment
+![Figure 22. Bisque4 Module Enrichment
 Plot](CpG%20Cluster%20Analysis/bisque4_Module_Enrichment_Plot.png)
 
-Figure 23. Bisque4 Module Enrichment Plot
+Figure 22. Bisque4 Module Enrichment Plot
 
     enrich_paleturquoise <- enrichModule(regions, module = "paleturquoise", genome = "hg38", file = "paleturquoise_Module_Enrichment.txt")
     plotEnrichment(enrich_paleturquoise, axis.text.y.size = 14, width = 10, file = "paleturquoise_Module_Enrichment_Plot.pdf")
 
-![Figure 24. Pale Turquoise Module Enrichment
+![Figure 23. Pale Turquoise Module Enrichment
 Plot](CpG%20Cluster%20Analysis/paleturquoise_Module_Enrichment_Plot.png)
 
-Figure 24. Pale Turquoise Module Enrichment Plot
+Figure 23. Pale Turquoise Module Enrichment Plot
 
 ## See Also
 

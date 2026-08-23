@@ -55,8 +55,9 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>CpG Cluster Analysis</h1>
-                        <h4 data-toc-skip class="author">Charles
-Mordaunt and Julia Mouat</h4>
+                        <h4 data-toc-skip class="author">Original
+authors: Charles Mordaunt and Julia Mouat, and modified by George
+Kuodza</h4>
             
             <h4 data-toc-skip class="date">2026-08-23</h4>
       
@@ -396,10 +397,6 @@ methylation, and later autism diagnosis.</p>
 <img src="CpG%20Cluster%20Analysis/ME_Trait_Correlation_Heatmap.png" alt="Figure 15. ME Trait Correlation Heatmap"><div class="figcaption">Figure 15. ME Trait Correlation Heatmap</div>
 </div>
 <pre><code><span><span class="fu"><a href="../reference/plotMEtraitCor.html">plotMEtraitCor</a></span><span class="op">(</span><span class="va">MEtraitCor</span>, moduleOrder <span class="op">=</span> <span class="va">moduleDendro</span><span class="op">$</span><span class="va">order</span>, traitOrder <span class="op">=</span> <span class="va">traitDendro</span><span class="op">$</span><span class="va">order</span>, topOnly <span class="op">=</span> <span class="cn">TRUE</span>, label.type <span class="op">=</span> <span class="st">"p"</span>, label.size <span class="op">=</span> <span class="fl">4</span>, label.nudge_y <span class="op">=</span> <span class="fl">0</span>, legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.11</span>, <span class="fl">0.795</span><span class="op">)</span>, colColorMargins <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">4.75</span>,<span class="fl">0.5</span>,<span class="fl">10.1</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"Top_ME_Trait_Correlation_Heatmap.pdf"</span>, width <span class="op">=</span> <span class="fl">8.5</span>, height <span class="op">=</span> <span class="fl">4.25</span><span class="op">)</span></span></code></pre>
-<div class="float">
-<img src="CpG%20Cluster%20Analysis/Top_ME_Trait_Correlation_Heatmap.png" alt="Figure 16. Top ME Trait Correlation Heatmap"><div class="figcaption">Figure 16. Top ME Trait Correlation
-Heatmap</div>
-</div>
 </div>
 <div class="section level2">
 <h2 id="explore-significant-module-eigennode---trait-correlations">Explore Significant Module Eigennode - Trait Correlations<a class="anchor" aria-label="anchor" href="#explore-significant-module-eigennode---trait-correlations"></a>
@@ -419,16 +416,16 @@ opposite directions) with the proportion of granulocytes and B
 cells.</p>
 <pre><code><span><span class="fu"><a href="../reference/plotMEtraitDot.html">plotMEtraitDot</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">bisque4</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Diagnosis_ASD</span>, traitCode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="fl">0</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="st">"#3366CC"</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="st">"#FF3366"</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.2</span>,<span class="fl">0.2</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Diagnosis"</span>, ylab <span class="op">=</span> <span class="st">"Bisque 4 Module Eigennode"</span>, file <span class="op">=</span> <span class="st">"bisque4_ME_Diagnosis_Dotplot.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/bisque4_ME_Diagnosis_Dotplot.png" alt="Figure 17. Bisque4 ME Diagnosis Dotplot"><div class="figcaption">Figure 17. Bisque4 ME Diagnosis Dotplot</div>
+<img src="CpG%20Cluster%20Analysis/bisque4_ME_Diagnosis_Dotplot.png" alt="Figure 16. Bisque4 ME Diagnosis Dotplot"><div class="figcaption">Figure 16. Bisque4 ME Diagnosis Dotplot</div>
 </div>
 <pre><code><span><span class="fu"><a href="../reference/plotMEtraitScatter.html">plotMEtraitScatter</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">paleturquoise</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Gran</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.15</span>,<span class="fl">0.15</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"Granulocytes"</span>, ylab <span class="op">=</span> <span class="st">"Pale Turquoise Module Eigennode"</span>, file <span class="op">=</span> <span class="st">"paleturquoise_ME_Granulocytes_Scatterplot.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/paleturquoise_ME_Granulocytes_Scatterplot.png" alt="Figure 18. Pale Turquoise ME Granulocytes Scatterplot"><div class="figcaption">Figure 18. Pale Turquoise ME Granulocytes
+<img src="CpG%20Cluster%20Analysis/paleturquoise_ME_Granulocytes_Scatterplot.png" alt="Figure 17. Pale Turquoise ME Granulocytes Scatterplot"><div class="figcaption">Figure 17. Pale Turquoise ME Granulocytes
 Scatterplot</div>
 </div>
 <pre><code><span><span class="fu"><a href="../reference/plotMEtraitScatter.html">plotMEtraitScatter</a></span><span class="op">(</span><span class="va">MEs</span><span class="op">$</span><span class="va">paleturquoise</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Bcell</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.15</span>,<span class="fl">0.15</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"B-cells"</span>, ylab <span class="op">=</span> <span class="st">"Pale Turquoise Module Eigennode"</span>, file <span class="op">=</span> <span class="st">"paleturquoise_ME_Bcells_Scatterplot.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/paleturquoise_ME_Bcells_Scatterplot.png" alt="Figure 19. Pale Turquoise ME B Cells Scatterplot"><div class="figcaption">Figure 19. Pale Turquoise ME B Cells
+<img src="CpG%20Cluster%20Analysis/paleturquoise_ME_Bcells_Scatterplot.png" alt="Figure 18. Pale Turquoise ME B Cells Scatterplot"><div class="figcaption">Figure 18. Pale Turquoise ME B Cells
 Scatterplot</div>
 </div>
 </div>
@@ -444,17 +441,17 @@ the same associations as above.</p>
 <pre><code><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="va">modules</span><span class="op">$</span><span class="va">regions</span></span>
 <span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="st">"bisque4"</span>, regions <span class="op">=</span> <span class="va">regions</span>, meth <span class="op">=</span> <span class="va">meth</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Diagnosis_ASD</span>, traitCode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="fl">0</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, traitColors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TD"</span> <span class="op">=</span> <span class="st">"#3366CC"</span>, <span class="st">"ASD"</span> <span class="op">=</span> <span class="st">"#FF3366"</span><span class="op">)</span>, trait.legend.title <span class="op">=</span> <span class="st">"Diagnosis"</span>, file <span class="op">=</span> <span class="st">"bisque4_Module_Methylation_Diagnosis_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/bisque4_Module_Methylation_Diagnosis_Heatmap.png" alt="Figure 20. Bisque4 Module Methylation Diagnosis Heatmap"><div class="figcaption">Figure 20. Bisque4 Module Methylation Diagnosis
+<img src="CpG%20Cluster%20Analysis/bisque4_Module_Methylation_Diagnosis_Heatmap.png" alt="Figure 19. Bisque4 Module Methylation Diagnosis Heatmap"><div class="figcaption">Figure 19. Bisque4 Module Methylation Diagnosis
 Heatmap</div>
 </div>
 <pre><code><span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="st">"paleturquoise"</span>, regions <span class="op">=</span> <span class="va">regions</span>, meth <span class="op">=</span> <span class="va">meth</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Gran</span>, expandY <span class="op">=</span> <span class="fl">0.04</span>, trait.legend.title <span class="op">=</span> <span class="st">"Granulocytes"</span>, trait.legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.034</span>,<span class="fl">3.35</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Methylation_Granulocytes_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Granulocytes_Heatmap.png" alt="Figure 21. Pale Turquoise Module Methylation Granulocytes Heatmap"><div class="figcaption">Figure 21. Pale Turquoise Module Methylation
+<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Granulocytes_Heatmap.png" alt="Figure 20. Pale Turquoise Module Methylation Granulocytes Heatmap"><div class="figcaption">Figure 20. Pale Turquoise Module Methylation
 Granulocytes Heatmap</div>
 </div>
 <pre><code><span><span class="fu"><a href="../reference/plotMethTrait.html">plotMethTrait</a></span><span class="op">(</span><span class="st">"paleturquoise"</span>, regions <span class="op">=</span> <span class="va">regions</span>, meth <span class="op">=</span> <span class="va">meth</span>, trait <span class="op">=</span> <span class="va">colData</span><span class="op">$</span><span class="va">Bcell</span>, expandY <span class="op">=</span> <span class="fl">0.04</span>, trait.legend.title <span class="op">=</span> <span class="st">"B-cells"</span>, trait.legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.004</span>,<span class="fl">3.35</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Methylation_Bcells_Heatmap.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Bcells_Heatmap.png" alt="Figure 22. Pale Turquoise Module Methylation B-Cells Heatmap"><div class="figcaption">Figure 22. Pale Turquoise Module Methylation
+<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Methylation_Bcells_Heatmap.png" alt="Figure 21. Pale Turquoise Module Methylation B-Cells Heatmap"><div class="figcaption">Figure 21. Pale Turquoise Module Methylation
 B-Cells Heatmap</div>
 </div>
 </div>
@@ -493,12 +490,12 @@ infection and other immune processes.</p>
 <span><span class="va">enrich_bisque4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enrichModule.html">enrichModule</a></span><span class="op">(</span><span class="va">regions</span>, module <span class="op">=</span> <span class="st">"bisque4"</span>, genome <span class="op">=</span> <span class="st">"hg38"</span>, file <span class="op">=</span> <span class="st">"bisque4_Module_Enrichment.txt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichment.html">plotEnrichment</a></span><span class="op">(</span><span class="va">enrich_bisque4</span>, file <span class="op">=</span> <span class="st">"bisque4_Module_Enrichment_Plot.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/bisque4_Module_Enrichment_Plot.png" alt="Figure 23. Bisque4 Module Enrichment Plot"><div class="figcaption">Figure 23. Bisque4 Module Enrichment Plot</div>
+<img src="CpG%20Cluster%20Analysis/bisque4_Module_Enrichment_Plot.png" alt="Figure 22. Bisque4 Module Enrichment Plot"><div class="figcaption">Figure 22. Bisque4 Module Enrichment Plot</div>
 </div>
 <pre><code><span><span class="va">enrich_paleturquoise</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enrichModule.html">enrichModule</a></span><span class="op">(</span><span class="va">regions</span>, module <span class="op">=</span> <span class="st">"paleturquoise"</span>, genome <span class="op">=</span> <span class="st">"hg38"</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Enrichment.txt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichment.html">plotEnrichment</a></span><span class="op">(</span><span class="va">enrich_paleturquoise</span>, axis.text.y.size <span class="op">=</span> <span class="fl">14</span>, width <span class="op">=</span> <span class="fl">10</span>, file <span class="op">=</span> <span class="st">"paleturquoise_Module_Enrichment_Plot.pdf"</span><span class="op">)</span></span></code></pre>
 <div class="float">
-<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Enrichment_Plot.png" alt="Figure 24. Pale Turquoise Module Enrichment Plot"><div class="figcaption">Figure 24. Pale Turquoise Module Enrichment
+<img src="CpG%20Cluster%20Analysis/paleturquoise_Module_Enrichment_Plot.png" alt="Figure 23. Pale Turquoise Module Enrichment Plot"><div class="figcaption">Figure 23. Pale Turquoise Module Enrichment
 Plot</div>
 </div>
 </div>
